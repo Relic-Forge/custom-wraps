@@ -1,4 +1,5 @@
 import { pinchView } from "./view-gesture.js";
+import { mountArtWheel } from "./art-wheel.js";
 import {
   SIZE,
   MAX_BYTES,
@@ -164,230 +165,6 @@ layerOptions.replaceWith($("transformControls"));
 $("duplicateLayer").parentElement.hidden = true;
 $("tools").append(colorButton);
 $("tools").append($("openLayers"));
-// A view-only shortcut palette: reuse the real controls so shortcuts cannot
-// drift from the left rail or create duplicate editing behavior.
-const quickTools = document.createElement("div");
-quickTools.id = "quickTools";
-quickTools.setAttribute("role", "toolbar");
-quickTools.setAttribute("aria-label", "Canvas quick tools");
-quickTools.hidden = true;
-document.body.append(quickTools);
-const quickSources = [
-  $("openAdd"),
-  document.querySelector('[data-tool="pan"]'),
-  document.querySelector('[data-tool="brush"]'),
-  document.querySelector('[data-tool="eraser"]'),
-  colorButton,
-];
-const quickDetail = document.createElement("div");
-quickDetail.className = "quick-detail";
-quickDetail.hidden = true;
-let quickHoldTimer;
-function openQuickDetail(eraser = false) {
-  [...quickTools.querySelectorAll("[data-quick-tool]")].forEach((b, i) => {
-    const pressed = quickSources[i].getAttribute("aria-pressed");
-    if (pressed !== null) b.setAttribute("aria-pressed", pressed);
-  });
-  quickDetail.replaceChildren();
-  quickDetail.hidden = false;
-  const title = document.createElement("strong");
-  title.textContent = eraser ? "Eraser size" : "Brush & size";
-  quickDetail.append(title);
-  if (!eraser) {
-    const options = document.createElement("div");
-    options.className = "quick-brushes";
-    for (const [value, label, symbol] of [
-      ["pencil", "Pencil", "✏️"],
-      ["pen", "Pen", "🖊️"],
-      ["marker", "Marker", "🖍️"],
-      ["spray", "Spray", "⁙"],
-    ]) {
-      const b = document.createElement("button");
-      b.textContent = symbol;
-      b.title = label;
-      b.setAttribute("aria-label", label);
-      b.setAttribute("aria-pressed", $("brushPreset").value === value);
-      b.onclick = () => {
-        brushChoices.querySelector(`[data-preset="${value}"]`).click();
-        quickTools.hidden = true;
-      };
-      options.append(b);
-    }
-    quickDetail.append(options);
-  }
-  const label = document.createElement("label"),
-    slider = document.createElement("input"),
-    value = document.createElement("output");
-  label.textContent = "Size ";
-  value.textContent = $("brushSize").value + " px";
-  label.append(value);
-  slider.type = "range";
-  slider.min = 1;
-  slider.max = 80;
-  slider.value = $("brushSize").value;
-  slider.setAttribute(
-    "aria-label",
-    eraser ? "Quick eraser size" : "Quick brush size",
-  );
-  slider.oninput = () => {
-    $("brushSize").value = slider.value;
-    $("brushSize").oninput();
-    value.textContent = slider.value + " px";
-  };
-  quickDetail.append(label, slider);
-  quickDetail.style.bottom = "auto";
-  quickDetail.style.top = "calc(100% + 8px)";
-  const rect = quickDetail.getBoundingClientRect();
-  if (rect.bottom > innerHeight - 8) {
-    quickDetail.style.top = "auto";
-    quickDetail.style.bottom = "calc(100% + 8px)";
-  }
-}
-for (const source of quickSources) {
-  const shortcut = document.createElement("button");
-  shortcut.innerHTML = source.innerHTML;
-  shortcut.title = source.title;
-  shortcut.setAttribute("aria-label", source.getAttribute("aria-label"));
-  shortcut.dataset.quickTool = "true";
-  let held = false;
-  if (source.dataset.tool === "brush") {
-    shortcut.title = "Draw · press and slide to choose a brush";
-    shortcut.onpointerdown = (e) => {
-      held = true;
-      shortcut.setPointerCapture(e.pointerId);
-      setTool("brush");
-      openQuickDetail();
-    };
-    shortcut.onpointermove = (e) => {
-      if (!shortcut.hasPointerCapture(e.pointerId)) return;
-      const choice = document
-        .elementFromPoint(e.clientX, e.clientY)
-        ?.closest(".quick-brushes button");
-      quickDetail
-        .querySelectorAll(".quick-brushes button")
-        .forEach((b) => b.classList.toggle("hover-choice", b === choice));
-    };
-    shortcut.onpointerup = (e) => {
-      clearTimeout(quickHoldTimer);
-      if (held) {
-        const choice = document
-          .elementFromPoint(e.clientX, e.clientY)
-          ?.closest(".quick-brushes button");
-        if (choice) choice.click();
-      }
-    };
-    shortcut.onpointercancel = () => {
-      clearTimeout(quickHoldTimer);
-      held = false;
-    };
-  }
-  shortcut.onclick = () => {
-    if (held) {
-      held = false;
-      return;
-    }
-    if (source.dataset.tool === "eraser") {
-      source.click();
-      openQuickDetail(true);
-      return;
-    }
-    quickTools.hidden = true;
-    source.click();
-  };
-  quickTools.append(shortcut);
-}
-quickTools.append(quickDetail);
-// The rail pencil opens the same selector, not a separate settings screen.
-const railBrush = document.querySelector('[data-tool="brush"]');
-railBrush.onpointerdown = (e) => {
-  quickTools.hidden = false;
-  const r = railBrush.getBoundingClientRect();
-  quickTools.style.left =
-    Math.max(8, r.left - quickTools.offsetWidth - 8) + "px";
-  quickTools.style.top =
-    Math.min(r.top, innerHeight - quickTools.offsetHeight - 8) + "px";
-  const trigger = quickTools.querySelectorAll("[data-quick-tool]")[2];
-  railBrush.setPointerCapture(e.pointerId);
-  setTool("brush");
-  openQuickDetail();
-};
-railBrush.onpointermove = (e) => {
-  if (!railBrush.hasPointerCapture(e.pointerId)) return;
-  const choice = document
-    .elementFromPoint(e.clientX, e.clientY)
-    ?.closest(".quick-brushes button");
-  quickDetail
-    .querySelectorAll(".quick-brushes button")
-    .forEach((b) => b.classList.toggle("hover-choice", b === choice));
-};
-railBrush.onpointerup = (e) => {
-  const choice = document
-    .elementFromPoint(e.clientX, e.clientY)
-    ?.closest(".quick-brushes button");
-  if (choice) choice.click();
-};
-$("stage").addEventListener("contextmenu", (e) => {
-  e.preventDefault();
-  quickTools.hidden = false;
-  quickDetail.hidden = true;
-  [...quickTools.querySelectorAll("[data-quick-tool]")].forEach((b, i) => {
-    const pressed = quickSources[i].getAttribute("aria-pressed");
-    if (pressed !== null) b.setAttribute("aria-pressed", pressed);
-  });
-  quickTools.style.setProperty("--ink", $("brushColor").value);
-  const bounds = quickTools.getBoundingClientRect();
-  const stage = $("stage").getBoundingClientRect();
-  quickTools.style.left =
-    Math.max(
-      stage.left + 6,
-      Math.min(
-        e.clientX - bounds.width / 2,
-        stage.right - bounds.width - 6,
-        innerWidth - bounds.width - 8,
-      ),
-    ) + "px";
-  quickTools.style.top =
-    Math.max(
-      stage.top + 6,
-      Math.min(
-        e.clientY - bounds.height / 2,
-        stage.bottom - bounds.height - 6,
-        innerHeight - bounds.height - 8,
-      ),
-    ) + "px";
-  quickTools.firstElementChild.focus();
-});
-document.addEventListener("pointerdown", (e) => {
-  if (
-    !quickTools.contains(e.target) &&
-    e.target.closest('[data-tool="brush"]') !== railBrush
-  ) {
-    clearTimeout(quickHoldTimer);
-    quickTools.hidden = true;
-  }
-});
-quickTools.addEventListener("keydown", (e) => {
-  if (e.target.tagName === "INPUT" && e.key !== "Escape") return;
-  const buttons = [...quickTools.children].filter(
-      (el) => el.tagName === "BUTTON",
-    ),
-    index = buttons.indexOf(document.activeElement);
-  if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-    e.preventDefault();
-    buttons[
-      (index + (e.key === "ArrowRight" ? 1 : buttons.length - 1)) %
-        buttons.length
-    ].focus();
-  }
-  if (e.key === "Escape") {
-    e.preventDefault();
-    quickTools.hidden = true;
-    clearTimeout(quickHoldTimer);
-    $("stage").focus();
-  }
-});
-$("stage").tabIndex = 0;
-window.addEventListener("resize", () => (quickTools.hidden = true));
 $("swatches").addEventListener("click", () =>
   colorButton.style.setProperty("--ink", $("brushColor").value),
 );
@@ -2052,6 +1829,20 @@ $("copyBrief").onclick = async () => {
     toast("Your brief is in the text box; select and copy it.");
   }
 };
+mountArtWheel({
+  stage: $("stage"),
+  trigger: document.querySelector('[data-tool="brush"]'),
+  getSize: () => Number($("brushSize").value),
+  setSize: (size) => {
+    $("brushSize").value = size;
+    $("brushSize").oninput();
+  },
+  current: () => (tool === "brush" ? $("brushPreset").value : tool),
+  select: (value) => {
+    if (value === "eraser" || value === "pan") setTool(value);
+    else brushChoices.querySelector(`[data-preset="${value}"]`).click();
+  },
+});
 try {
   vehicles = await (await fetch("./vehicles.json")).json();
   $("vehicle").replaceChildren(

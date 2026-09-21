@@ -16,6 +16,16 @@ Serve the repository root because template paths reference the sibling vehicle f
 
 ## Editor
 
+### Quick brush wheel
+
+- Mouse: hold the right button over the canvas, point toward a tool, release to select. Return to the center before release to cancel. Scroll while holding to adjust size.
+- Touch/pen or mouse: press the rail's drawing icon and slide to a tool, or tap the icon and tap a choice. The wheel has a large size slider with finer adjustment at small sizes.
+- Brush footprints show the current size at the current canvas zoom. Existing custom size choices survive tool changes.
+- Optional selection ticks default off; use the Sound toggle below the wheel. Its preference is stored on this browser. No external audio files or services are used.
+- Escape, interrupted gestures, and losing window focus cancel the wheel. Reduced-motion preferences disable its entry animation.
+
+Desktop browser checks cover tap selection, drag-release selection, and size feedback. Automated interaction tests cover right-button hold/release, center cancellation, wheel sizing, and interrupted capture. Real iOS/Android performance, touch feel and sound output still require physical-device testing.
+
 Current interface: picture-led tools, a visual **Focus area** picker with highlighted template thumbnails, smooth upright focus with surrounding context, and one-tap canvas rotation. Touch input supports two-finger pan/zoom/rotation; physical iPhone/iPad performance and gesture testing remain outstanding. Pencil, Pen and Marker presets, Size and Strength are visible in the color panel; custom HEX is handled by the native Any color picker.
 
 Focus motion respects reduced-motion preferences and stops immediately when drawing, dragging or zooming begins. These are view-only changes and do not alter exports.
