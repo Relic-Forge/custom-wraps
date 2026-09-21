@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Relic Forge Wrap Studio</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Relic Forge</p>
+        <h1>Family Wrap Studio</h1>
+      </div>
+      <div class="vehicle-badge">
+        <span>Active vehicle</span>
+        <strong>Model Y · 2026 · Premium</strong>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <aside class="controls" aria-label="Design controls">
+        <section class="control-card welcome-card">
+          <span class="step-number">1</span>
+          <div>
+            <h2>Pick a starting look</h2>
+            <p>Choose a color and pattern, then add family photos, drawings, or AI artwork.</p>
+          </div>
+        </section>
+
+        <section class="control-card">
+          <label for="baseColor">Base color</label>
+          <div class="color-row">
+            <input id="baseColor" type="color" value="#3f2f68" />
+            <div id="swatches" class="swatches" aria-label="Suggested colors"></div>
+          </div>
+
+          <label for="pattern">Pattern</label>
+          <select id="pattern">
+            <option value="solid">Solid</option>
+            <option value="stripes">Racing stripes</option>
+            <option value="dots">Confetti dots</option>
+            <option value="checker">Checkerboard</option>
+            <option value="sunburst">Sunburst</option>
+          </select>
+          <label for="accentColor">Pattern color</label>
+          <input id="accentColor" type="color" value="#ffcf56" />
+        </section>
+
+        <section class="control-card">
+          <div class="section-heading">
+            <div>
+              <span class="step-number">2</span>
+              <h2>Add your artwork</h2>
+            </div>
+          </div>
+          <label class="upload-button" for="artUpload">
+            <span class="upload-icon">＋</span>
+            <span><strong>Add photos or artwork</strong><small>PNG, JPG, or WEBP</small></span>
+          </label>
+          <input id="artUpload" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden />
+
+          <div class="text-adder">
+            <input id="textInput" type="text" maxlength="30" placeholder="Add a name or short phrase" />
+            <button id="addText" class="secondary-button" type="button">Add text</button>
+          </div>
+        </section>
+
+        <section class="control-card" id="layerEditor">
+          <div class="section-heading split">
+            <h2>Layers</h2>
+            <span id="layerCount" class="count-badge">0</span>
+          </div>
+          <div id="emptyLayers" class="empty-state">Add an image or phrase to begin.</div>
+          <div id="layerList" class="layer-list"></div>
+
+          <div id="transformControls" class="transform-controls" hidden>
+            <label for="scale">Size <output id="scaleValue">100%</output></label>
+            <input id="scale" type="range" min="10" max="400" value="100" />
+            <label for="rotation">Rotate <output id="rotationValue">0°</output></label>
+            <input id="rotation" type="range" min="-180" max="180" value="0" />
+            <label for="opacity">Opacity <output id="opacityValue">100%</output></label>
+            <input id="opacity" type="range" min="10" max="100" value="100" />
+            <div class="button-grid">
+              <button id="fitLayer" type="button" class="secondary-button">Fit</button>
+              <button id="centerLayer" type="button" class="secondary-button">Center</button>
+              <button id="duplicateLayer" type="button" class="secondary-button">Duplicate</button>
+              <button id="deleteLayer" type="button" class="danger-button">Delete</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="control-card export-card">
+          <div class="section-heading">
+            <div>
+              <span class="step-number">3</span>
+              <h2>Export for Tesla</h2>
+            </div>
+          </div>
+          <label for="fileName">Wrap name</label>
+          <div class="filename-row">
+            <input id="fileName" type="text" maxlength="26" value="Darcy_Family_Wrap" />
+            <span>.png</span>
+          </div>
+          <button id="exportButton" class="primary-button" type="button">Download Tesla PNG</button>
+          <div id="validation" class="validation" aria-live="polite">
+            <div><span>✓</span> Official 2025+ Premium template</div>
+            <div><span>✓</span> Transparent body-panel mask</div>
+            <div><span>✓</span> Tesla-safe filename</div>
+            <div><span>○</span> File size checked at export</div>
+          </div>
+          <div class="project-actions">
+            <button id="saveProject" class="text-button" type="button">Save editable project</button>
+            <label class="text-button" for="projectUpload">Open project</label>
+            <input id="projectUpload" type="file" accept="application/json,.json" hidden />
+          </div>
+        </section>
+      </aside>
+
+      <section class="workspace" aria-label="Wrap canvas">
+        <div class="workspace-heading">
+          <div>
+            <p class="eyebrow">Official UV template</p>
+            <h2>Model Y Premium (2025+)</h2>
+          </div>
+          <label class="toggle">
+            <input id="showGuide" type="checkbox" checked />
+            <span>Show panel guide</span>
+          </label>
+        </div>
+
+        <div class="canvas-stage" id="canvasStage">
+          <canvas id="designCanvas" width="1024" height="1024" aria-label="Tesla wrap design"></canvas>
+          <div class="canvas-hint">Drag the selected artwork directly on the wrap</div>
+        </div>
+
+        <div class="workspace-footer">
+          <div class="tip-card">
+            <strong>Design tip</strong>
+            <span>Patterns work across every panel. Keep faces and words away from panel edges.</span>
+          </div>
+          <div class="spec-card">
+            <span>Export target</span>
+            <strong>PNG · 1024×1024 · ≤ 1 MB</strong>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>

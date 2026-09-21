@@ -2,6 +2,12 @@
 
 This repository provides templates and examples for creating custom wrap designs for your Tesla's 3D vehicle visualization. Personalize your car's appearance in the Paint Shop with your own unique designs.
 
+## Relic Forge Family Wrap Studio
+
+This fork includes a local, kid-friendly editor configured for a **2026 Model Y Premium**. Double-click `start-wrap-studio.command` on a Mac, or see [`studio/README.md`](studio/README.md) for instructions.
+
+The studio accepts photos, drawings, and AI-generated artwork; clips the design to Tesla's official `modely-2025-premium` template; and validates the exported PNG dimensions, transparency, filename, and 1 MB size limit.
+
 ## How to Use Custom Wraps
 
 1. **Download** the template for your specific vehicle model (see links below)
