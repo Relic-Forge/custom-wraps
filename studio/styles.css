@@ -912,6 +912,89 @@ main {
   }
 }
 
+dialog.editor-flyout {
+  position: fixed;
+  inset: 86px 0 0 auto;
+  margin: 0;
+  width: min(360px, 82vw);
+  height: calc(100dvh - 86px);
+  max-height: none;
+  box-sizing: border-box;
+  border-radius: 20px 0 0 20px;
+  padding: 18px;
+  z-index: 20;
+  box-shadow: -12px 0 35px #0005;
+}
+dialog.editor-flyout[open] {
+  animation: flyout-in 180ms ease-out;
+}
+@keyframes flyout-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  dialog.editor-flyout[open] {
+    animation: none;
+  }
+}
+#layersDialog #layerList {
+  max-height: none;
+}
+#layersDialog .layer-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  margin: 10px 0;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+#layersDialog .layer-actions {
+  grid-column: 2;
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+#layersDialog .layer-actions button {
+  min-width: 36px;
+  min-height: 40px;
+  padding: 4px;
+  flex: 1;
+}
+#layersDialog .layer-grip {
+  padding: 0;
+  min-width: 0;
+  touch-action: none;
+  cursor: grab;
+  grid-row: 1 / 3;
+}
+#layersDialog .drop-target {
+  border-color: var(--gold);
+  background: #ffbd6920;
+}
+#layersDialog .reordering {
+  opacity: 0.6;
+}
+#layersDialog #transformControls {
+  margin-top: 18px;
+}
+#colorsDialog.editor-flyout #swatches {
+  gap: 5px;
+}
+#colorsDialog.editor-flyout #swatches button {
+  min-height: 36px;
+}
+@media (max-width: 800px) {
+  dialog.editor-flyout {
+    top: 64px;
+    height: calc(100dvh - 64px);
+  }
+}
 #quickTools {
   position: fixed;
   z-index: 30;

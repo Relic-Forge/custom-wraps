@@ -60,7 +60,8 @@ for (const [id, text, dialog] of [
   const b = document.createElement("button");
   b.id = id;
   b.textContent = text;
-  b.onclick = () => dialog.showModal();
+  b.onclick = () =>
+    dialog === layersDialog ? openFlyout(dialog) : dialog.showModal();
   $("exportButton").before(b);
 }
 $("exportButton").textContent = "Finish ↗";
@@ -139,7 +140,26 @@ colorButton.id = "openColors";
 colorButton.setAttribute("aria-label", "Choose color and brush");
 colorButton.title = "Choose color and brush";
 colorButton.innerHTML = '<span class="current-color"></span>';
-colorButton.onclick = () => colorsDialog.showModal();
+colorButton.onclick = () => openFlyout(colorsDialog);
+function openFlyout(dialog) {
+  for (const other of [layersDialog, colorsDialog])
+    if (other.open) other.close();
+  dialog.show();
+}
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    for (const drawer of [layersDialog, colorsDialog])
+      if (drawer.open) drawer.close();
+  }
+});
+for (const drawer of [layersDialog, colorsDialog])
+  drawer.classList.add("editor-flyout");
+addPhotoLayer.hidden = true;
+$("layerCount").hidden = true;
+placement.hidden = true;
+moveArtworkButton.hidden = true;
+layerOptions.replaceWith($("transformControls"));
+$("duplicateLayer").parentElement.hidden = true;
 $("tools").append(colorButton);
 // A view-only shortcut palette: reuse the real controls so shortcuts cannot
 // drift from the left rail or create duplicate editing behavior.
@@ -642,8 +662,41 @@ function render() {
   ctx.restore();
   drawOverlay();
 }
+let locator = null,
+  locatorStart = 0,
+  locatorFrame = 0;
+function locateLayer(l) {
+  cancelAnimationFrame(locatorFrame);
+  locator = makeCanvas();
+  const c = locator.getContext("2d");
+  if (l.type === "paint") l.strokes.forEach((s) => drawLayer(c, s));
+  else drawLayer(c, l);
+  c.globalCompositeOperation = "source-in";
+  c.fillStyle = "#ffe69a";
+  c.fillRect(0, 0, SIZE, SIZE);
+  c.globalCompositeOperation = "destination-in";
+  c.drawImage(template, 0, 0, SIZE, SIZE);
+  locatorStart = performance.now();
+  function pulse() {
+    if (performance.now() - locatorStart > 900) {
+      locator = null;
+      drawOverlay();
+      return;
+    }
+    drawOverlay();
+    locatorFrame = requestAnimationFrame(pulse);
+  }
+  pulse();
+}
 function drawOverlay() {
   ox.clearRect(0, 0, SIZE, SIZE);
+  if (locator) {
+    ox.save();
+    ox.globalAlpha =
+      Math.max(0, 1 - (performance.now() - locatorStart) / 900) * 0.85;
+    ox.drawImage(locator, 0, 0);
+    ox.restore();
+  }
   const p = panel();
   if ($("showGuide").checked && p) {
     const [x, y, w, h] = p.safe;
@@ -714,7 +767,7 @@ function updateUI() {
       selected = l.id;
       setTool(l.type === "paint" ? "brush" : "select");
       updateUI();
-      drawOverlay();
+      locateLayer(l);
     };
     const row = document.createElement("div");
     row.className = "layer-row";
@@ -731,7 +784,76 @@ function updateUI() {
       change(() => {
         l.visible = l.visible === false;
       });
-    row.append(b, visibility);
+    row.dataset.layerId = l.id;
+    const actions = document.createElement("div");
+    actions.className = "layer-actions";
+    actions.append(visibility);
+    for (const [symbol, label, action] of [
+      [
+        l.locked ? "🔒" : "🔓",
+        l.locked ? "Unlock" : "Lock",
+        () => $("toggleLock").onclick(),
+      ],
+      ["⧉", "Duplicate", () => $("duplicateLayer").onclick()],
+      ["↑", "Forward", () => $("raiseLayer").onclick()],
+      ["↓", "Backward", () => $("lowerLayer").onclick()],
+      ["×", "Delete", () => $("deleteLayer").onclick()],
+    ]) {
+      const button = document.createElement("button");
+      button.textContent = symbol;
+      button.title = label;
+      button.setAttribute("aria-label", `${label} ${l.name}`);
+      button.onclick = () => {
+        selected = l.id;
+        action();
+      };
+      actions.append(button);
+    }
+    const handle = document.createElement("button");
+    handle.textContent = "⠿";
+    handle.className = "layer-grip";
+    handle.title = "Drag to reorder";
+    handle.setAttribute("aria-label", `Reorder ${l.name}`);
+    handle.disabled = !!l.locked;
+    let destination = null;
+    handle.onpointerdown = (e) => {
+      e.preventDefault();
+      handle.setPointerCapture(e.pointerId);
+      row.classList.add("reordering");
+    };
+    handle.onpointermove = (e) => {
+      if (!handle.hasPointerCapture(e.pointerId)) return;
+      const target = document
+        .elementFromPoint(e.clientX, e.clientY)
+        ?.closest(".layer-row");
+      document
+        .querySelectorAll(".drop-target")
+        .forEach((el) => el.classList.remove("drop-target"));
+      destination = target?.dataset.layerId;
+      if (target && target !== row) target.classList.add("drop-target");
+    };
+    handle.onpointerup = () => {
+      row.classList.remove("reordering");
+      document
+        .querySelectorAll(".drop-target")
+        .forEach((el) => el.classList.remove("drop-target"));
+      if (destination && destination !== l.id)
+        change(() => {
+          const from = state.layers.findIndex((x) => x.id === l.id),
+            to = state.layers.findIndex((x) => x.id === destination);
+          state.layers.splice(from, 1);
+          state.layers.splice(to, 0, l);
+        });
+      destination = null;
+    };
+    handle.onpointercancel = () => {
+      destination = null;
+      row.classList.remove("reordering");
+      document
+        .querySelectorAll(".drop-target")
+        .forEach((el) => el.classList.remove("drop-target"));
+    };
+    row.append(handle, b, actions);
     $("layerList").append(row);
   }
   const l = layer();
