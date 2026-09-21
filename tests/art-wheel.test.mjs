@@ -102,6 +102,33 @@ test("wheel selects with a single right-button gesture, cancels in center, and s
     slider.value = "0";
     slider.oninput();
     assert.equal(size, 1);
+    // Crossing the Spray sector en route to sizing must not select Spray.
+    const sizing = wheel.children.at(-1);
+    sizing.getBoundingClientRect = () => ({
+      left: 270,
+      right: 530,
+      top: 440,
+      bottom: 560,
+    });
+    slider.getBoundingClientRect = () => ({
+      left: 286,
+      right: 514,
+      top: 460,
+      bottom: 504,
+      width: 228,
+    });
+    const selectionsBefore = selected.length;
+    stage.emit("pointerdown");
+    stage.emit("pointermove", { clientY: 395 });
+    stage.emit("pointermove", { clientX: 514, clientY: 480 });
+    stage.emit("pointerup", { clientX: 514, clientY: 480 });
+    assert.equal(size, 80);
+    assert.equal(selected.length, selectionsBefore);
+    assert.equal(wheel.hidden, true);
+    trigger.emit("pointerdown", { button: 0 });
+    trigger.emit("pointerup", { button: 0 });
+    slider.emit("pointerup", { button: 0 });
+    assert.equal(wheel.hidden, true);
     stage.emit("pointerdown");
     stage.emit("lostpointercapture");
     assert.equal(wheel.hidden, true);

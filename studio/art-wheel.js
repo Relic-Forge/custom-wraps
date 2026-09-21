@@ -81,6 +81,12 @@ export function mountArtWheel({
     setSize(Math.round(1 + 79 * (Number(slider.value) / 100) ** 2));
     readout.textContent = ` ${getSize()} px`;
   };
+  // Tap-open mode: release finishes sizing, exactly as release finishes a tool
+  // selection. No extra click on the canvas is needed.
+  slider.addEventListener("pointerup", () => {
+    sound(true);
+    close();
+  });
   const soundButton = document.createElement("button");
   soundButton.className = "wheel-sound";
   soundButton.setAttribute("aria-label", "Selection sounds");
@@ -156,6 +162,26 @@ export function mountArtWheel({
     if (Math.hypot(e.clientX - held.startX, e.clientY - held.startY) > 8)
       moved = true;
     if (!moved) return;
+    const sizeBox = sizing.getBoundingClientRect();
+    if (
+      held.sizing ||
+      (e.clientX >= sizeBox.left &&
+        e.clientX <= sizeBox.right &&
+        e.clientY >= sizeBox.top &&
+        e.clientY <= sizeBox.bottom)
+    ) {
+      held.sizing = true;
+      highlight(-1);
+      center.textContent = "Size";
+      const track = slider.getBoundingClientRect();
+      const ratio = Math.max(
+        0,
+        Math.min(1, (e.clientX - track.left) / Math.max(1, track.width)),
+      );
+      setSize(Math.round(1 + 79 * ratio ** 2));
+      syncSize();
+      return;
+    }
     const x = e.clientX - origin.x,
       y = e.clientY - origin.y;
     highlight(
@@ -171,7 +197,13 @@ export function mountArtWheel({
     e.preventDefault();
     e.stopImmediatePropagation();
     const tap = held.rail && !moved;
+    const sizingGesture = held.sizing;
     held = null;
+    if (sizingGesture) {
+      sound(true);
+      close();
+      return;
+    }
     if (tap) {
       center.focus();
       return;
@@ -206,6 +238,11 @@ export function mountArtWheel({
     if (wheel.hidden) return;
     e.preventDefault();
     e.stopImmediatePropagation();
+    if (held) {
+      held.sizing = true;
+      highlight(-1);
+      center.textContent = "Size";
+    }
     setSize(Math.max(1, Math.min(80, getSize() + (e.deltaY > 0 ? -1 : 1))));
     syncSize();
   }
