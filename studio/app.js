@@ -141,6 +141,83 @@ colorButton.title = "Choose color and brush";
 colorButton.innerHTML = '<span class="current-color"></span>';
 colorButton.onclick = () => colorsDialog.showModal();
 $("tools").append(colorButton);
+// A view-only shortcut palette: reuse the real controls so shortcuts cannot
+// drift from the left rail or create duplicate editing behavior.
+const quickTools = document.createElement("div");
+quickTools.id = "quickTools";
+quickTools.setAttribute("role", "toolbar");
+quickTools.setAttribute("aria-label", "Canvas quick tools");
+quickTools.hidden = true;
+document.body.append(quickTools);
+const quickSources = [
+  $("openAdd"),
+  document.querySelector('[data-tool="pan"]'),
+  document.querySelector('[data-tool="brush"]'),
+  document.querySelector('[data-tool="eraser"]'),
+  colorButton,
+];
+for (const source of quickSources) {
+  const shortcut = document.createElement("button");
+  shortcut.innerHTML = source.innerHTML;
+  shortcut.title = source.title;
+  shortcut.setAttribute("aria-label", source.getAttribute("aria-label"));
+  shortcut.onclick = () => {
+    quickTools.hidden = true;
+    source.click();
+  };
+  quickTools.append(shortcut);
+}
+$("stage").addEventListener("contextmenu", (e) => {
+  e.preventDefault();
+  quickTools.hidden = false;
+  [...quickTools.children].forEach((b, i) => {
+    const pressed = quickSources[i].getAttribute("aria-pressed");
+    if (pressed !== null) b.setAttribute("aria-pressed", pressed);
+  });
+  quickTools.style.setProperty("--ink", $("brushColor").value);
+  const bounds = quickTools.getBoundingClientRect();
+  const stage = $("stage").getBoundingClientRect();
+  quickTools.style.left =
+    Math.max(
+      stage.left + 6,
+      Math.min(
+        e.clientX,
+        stage.right - bounds.width - 6,
+        innerWidth - bounds.width - 8,
+      ),
+    ) + "px";
+  quickTools.style.top =
+    Math.max(
+      stage.top + 6,
+      Math.min(
+        e.clientY,
+        stage.bottom - bounds.height - 6,
+        innerHeight - bounds.height - 8,
+      ),
+    ) + "px";
+  quickTools.firstElementChild.focus();
+});
+document.addEventListener("pointerdown", (e) => {
+  if (!quickTools.contains(e.target)) quickTools.hidden = true;
+});
+quickTools.addEventListener("keydown", (e) => {
+  const buttons = [...quickTools.children],
+    index = buttons.indexOf(document.activeElement);
+  if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+    e.preventDefault();
+    buttons[
+      (index + (e.key === "ArrowRight" ? 1 : buttons.length - 1)) %
+        buttons.length
+    ].focus();
+  }
+  if (e.key === "Escape") {
+    e.preventDefault();
+    quickTools.hidden = true;
+    $("stage").focus();
+  }
+});
+$("stage").tabIndex = 0;
+window.addEventListener("resize", () => (quickTools.hidden = true));
 $("swatches").addEventListener("click", () =>
   colorButton.style.setProperty("--ink", $("brushColor").value),
 );

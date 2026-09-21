@@ -912,6 +912,24 @@ main {
   }
 }
 
+#quickTools {
+  position: fixed;
+  z-index: 30;
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid #b5a3ff70;
+  border-radius: 16px;
+  background: #211e2cf5;
+  box-shadow: 0 8px 32px #0008;
+}
+#quickTools button {
+  width: 44px;
+  height: 44px;
+  padding: 8px;
+  display: grid;
+  place-items: center;
+}
 .custom-color-area {
   width: 100%;
   display: grid;
