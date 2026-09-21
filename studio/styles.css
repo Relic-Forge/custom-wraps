@@ -1099,6 +1099,29 @@ dialog.editor-flyout[open] {
     animation: none;
   }
 }
+#quickTools .quick-brushes button {
+  text-align: center;
+  font-size: 26px;
+}
+#quickTools .quick-brushes button.hover-choice {
+  background: #b5a3ff55;
+  transform: scale(1.04);
+  border-color: var(--selected-ink);
+}
+#brushFootprint {
+  position: fixed;
+  pointer-events: none;
+  z-index: 15;
+  border: 1px solid white;
+  box-shadow: 0 0 0 1px #111;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+}
+#brushFootprint.erasing {
+  border-style: dashed;
+  background: #ffffff10;
+}
 #quickTools {
   position: fixed;
   z-index: 30;

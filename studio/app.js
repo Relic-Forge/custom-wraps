@@ -203,11 +203,13 @@ function openQuickDetail(eraser = false) {
       ["spray", "Spray", "⁙"],
     ]) {
       const b = document.createElement("button");
-      b.textContent = `${symbol} ${label}`;
+      b.textContent = symbol;
+      b.title = label;
+      b.setAttribute("aria-label", label);
       b.setAttribute("aria-pressed", $("brushPreset").value === value);
       b.onclick = () => {
         brushChoices.querySelector(`[data-preset="${value}"]`).click();
-        openQuickDetail(false);
+        quickTools.hidden = true;
       };
       options.append(b);
     }
@@ -249,15 +251,21 @@ for (const source of quickSources) {
   shortcut.dataset.quickTool = "true";
   let held = false;
   if (source.dataset.tool === "brush") {
-    shortcut.title = "Draw · hold for brushes and size";
+    shortcut.title = "Draw · press and slide to choose a brush";
     shortcut.onpointerdown = (e) => {
-      held = false;
+      held = true;
       shortcut.setPointerCapture(e.pointerId);
-      quickHoldTimer = setTimeout(() => {
-        held = true;
-        setTool("brush");
-        openQuickDetail();
-      }, 240);
+      setTool("brush");
+      openQuickDetail();
+    };
+    shortcut.onpointermove = (e) => {
+      if (!shortcut.hasPointerCapture(e.pointerId)) return;
+      const choice = document
+        .elementFromPoint(e.clientX, e.clientY)
+        ?.closest(".quick-brushes button");
+      quickDetail
+        .querySelectorAll(".quick-brushes button")
+        .forEach((b) => b.classList.toggle("hover-choice", b === choice));
     };
     shortcut.onpointerup = (e) => {
       clearTimeout(quickHoldTimer);
@@ -288,12 +296,36 @@ for (const source of quickSources) {
   };
   quickTools.append(shortcut);
 }
-const quickExpand = document.createElement("button");
-quickExpand.textContent = "⌄";
-quickExpand.title = "Brushes and size";
-quickExpand.setAttribute("aria-label", "Brushes and size");
-quickExpand.onclick = () => openQuickDetail(tool === "eraser");
-quickTools.append(quickExpand, quickDetail);
+quickTools.append(quickDetail);
+// The rail pencil opens the same selector, not a separate settings screen.
+const railBrush = document.querySelector('[data-tool="brush"]');
+railBrush.onpointerdown = (e) => {
+  quickTools.hidden = false;
+  const r = railBrush.getBoundingClientRect();
+  quickTools.style.left =
+    Math.max(8, r.left - quickTools.offsetWidth - 8) + "px";
+  quickTools.style.top =
+    Math.min(r.top, innerHeight - quickTools.offsetHeight - 8) + "px";
+  const trigger = quickTools.querySelectorAll("[data-quick-tool]")[2];
+  railBrush.setPointerCapture(e.pointerId);
+  setTool("brush");
+  openQuickDetail();
+};
+railBrush.onpointermove = (e) => {
+  if (!railBrush.hasPointerCapture(e.pointerId)) return;
+  const choice = document
+    .elementFromPoint(e.clientX, e.clientY)
+    ?.closest(".quick-brushes button");
+  quickDetail
+    .querySelectorAll(".quick-brushes button")
+    .forEach((b) => b.classList.toggle("hover-choice", b === choice));
+};
+railBrush.onpointerup = (e) => {
+  const choice = document
+    .elementFromPoint(e.clientX, e.clientY)
+    ?.closest(".quick-brushes button");
+  if (choice) choice.click();
+};
 $("stage").addEventListener("contextmenu", (e) => {
   e.preventDefault();
   quickTools.hidden = false;
@@ -326,7 +358,10 @@ $("stage").addEventListener("contextmenu", (e) => {
   quickTools.firstElementChild.focus();
 });
 document.addEventListener("pointerdown", (e) => {
-  if (!quickTools.contains(e.target)) {
+  if (
+    !quickTools.contains(e.target) &&
+    e.target.closest('[data-tool="brush"]') !== railBrush
+  ) {
     clearTimeout(quickHoldTimer);
     quickTools.hidden = true;
   }
@@ -1145,6 +1180,43 @@ function animateFocus(target) {
   }
   focusFrame = requestAnimationFrame(step);
 }
+const brushFootprint = document.createElement("div");
+brushFootprint.id = "brushFootprint";
+brushFootprint.hidden = true;
+document.body.append(brushFootprint);
+let hoverPoint = null,
+  footprintTimer;
+function updateFootprint(preview = false) {
+  const rect = $("stage").getBoundingClientRect();
+  const location =
+    hoverPoint ||
+    (preview
+      ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+      : null);
+  if (!location || !["brush", "eraser"].includes(tool)) {
+    brushFootprint.hidden = true;
+    return;
+  }
+  const diameter = (+$("brushSize").value * baseSize() * zoom) / SIZE;
+  brushFootprint.hidden = false;
+  Object.assign(brushFootprint.style, {
+    left: location.x + "px",
+    top: location.y + "px",
+    width: Math.max(2, diameter) + "px",
+    height: Math.max(2, diameter) + "px",
+  });
+  brushFootprint.classList.toggle("erasing", tool === "eraser");
+  if (preview) {
+    clearTimeout(footprintTimer);
+    footprintTimer = setTimeout(() => {
+      if (!hoverPoint) brushFootprint.hidden = true;
+    }, 900);
+  }
+}
+$("stage").addEventListener("pointerleave", () => {
+  hoverPoint = null;
+  brushFootprint.hidden = true;
+});
 function view() {
   const size = baseSize() * zoom;
   for (const c of [canvas, overlay]) {
@@ -1155,6 +1227,7 @@ function view() {
   $("zoomValue").textContent = Math.round(zoom * 100) + "%";
   $("canvasAngle").value = viewAngle;
   $("canvasAngleValue").textContent = viewAngle + "°";
+  updateFootprint();
 }
 function turnCanvas(angle) {
   stopFocus();
@@ -1421,6 +1494,8 @@ $("stage").onpointerdown = (e) => {
   }
 };
 $("stage").onpointermove = (e) => {
+  hoverPoint = { x: e.clientX, y: e.clientY };
+  updateFootprint();
   if (touches.has(e.pointerId)) touches.set(e.pointerId, touchPosition(e));
   if (touchView) {
     if (touches.size === 2) {
@@ -1643,6 +1718,7 @@ $("addPaintLayer").onclick = () => {
 $("brushSize").oninput = () => {
   customBrushSize = true;
   $("brushSizeValue").textContent = $("brushSize").value + " px";
+  updateFootprint(true);
 };
 for (const k of ["baseColor", "accentColor", "pattern"]) {
   $(k).onfocus = () => checkpoint();
