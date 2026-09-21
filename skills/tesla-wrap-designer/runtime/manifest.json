@@ -1,0 +1,23 @@
+{
+  "templateSource": "https://github.com/teslamotors/custom-wraps",
+  "templateRevision": "86c7d31454caf0f20af6f6af105f577643f13bce",
+  "requirementsChecked": "2026-09-20",
+  "files": {
+    "studio/core.js": "703b91c8b00c09fa4355c11fd9b6ced3c4ff8ad8fe2249dc8f1d4dd9b69e97d1",
+    "scripts/compose-wrap.mjs": "284a5bdc5d0adbaa5ff3f6ddbcf6e8202244600313b19a2e28ca4e7af9d5a20e",
+    "scripts/validate-wrap.mjs": "f10bed02f3876dab0649dc6838a3499b0116f71f06f210b5fe84a72881816d0e",
+    "scripts/finish-drawing.mjs": "7a0412fa1d5c5d820916679aa9e6d984f7e1ba86f104e2cad3dafe6ff482d921",
+    "cybertruck/template.png": "02bab88dc29958f0a26d01aea053184da32cd4648862b1bcbb332f831482a658",
+    "model3/template.png": "1ab297c83f904d50f3be188818e33d67fad432cbca60d499717e58bb1192055d",
+    "model3-2024-base/template.png": "661c8b779ec34890ef453fd096975f17fa40075c988faf343898ac2b6136e443",
+    "model3-2024-performance/template.png": "a59d8ec97c42b579c9911ce236678dc2ee7e3a6ad92ae83fa1a04af427157201",
+    "models-2021/template.png": "9a0e7900da5d5be23bcdfd3867c742c4c0a83a6ec024c68f54c23894b12737a3",
+    "models-2025-plaid/template.png": "24abdcfe489d5328a8a9f09823dc654553fff2eb2c5224bd0ea3da253e9ee09c",
+    "modelx-2021/template.png": "ce823059d4bf72bde9abfc1478a4e8615dc385013383935cc0ecdf39fc51e66b",
+    "modely/template.png": "145e56ff1d9d3d5d3c3bac4ce1b331387858cb3ee7f17dce7d1de2100bf42a4b",
+    "modely-2025-base/template.png": "df7e18b382306d3631be58ec313471bdc02e6183b7d4d1a1e33306fd345f373a",
+    "modely-2025-performance/template.png": "f55baf4fc9f097650c2a15754005e913365efde55695c424fb78f35c57ae8f0b",
+    "modely-2025-premium/template.png": "336a738ffa7b11eaa4909fcaacc6d9066b38f9a06feba1fddf9634554f27e3b5",
+    "modely-l/template.png": "08d486b115da0b2df988e26e6260704150044dc1b96a319f2c432f79b09c6400"
+  }
+}

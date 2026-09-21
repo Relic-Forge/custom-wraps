@@ -1,4 +1,4 @@
-# Relic Forge Wrap Studio — local family lab
+# That's a Wrap — family drawing editor
 
 A browser art editor and companion AI design skill for Tesla's digital Paint Shop wraps. All 12 templates in the repository are available. This creates digital vehicle artwork, not physical vinyl print/cut files.
 
@@ -16,16 +16,20 @@ Serve the repository root because template paths reference the sibling vehicle f
 
 ## Editor
 
-- Photos, text, patterns, and editable freehand strokes; pressure-sensitive pointer drawing and an ink eraser.
+Current interface: picture-led tools, a visual **Focus area** picker with highlighted template thumbnails, smooth upright focus with surrounding context, and one-tap canvas rotation. Touch input supports two-finger pan/zoom/rotation; physical iPhone/iPad performance and gesture testing remain outstanding. Pencil, Pen and Marker presets, Size and Strength are visible in the color panel; custom HEX is handled by the native Any color picker.
+
+Focus motion respects reduced-motion preferences and stops immediately when drawing, dragging or zooming begins. These are view-only changes and do not alter exports.
+
+- Photos, text, patterns, and named paint layers containing editable freehand strokes. Pressure-sensitive drawing, layer-isolated erasing, pen/pencil/marker presets, brush opacity, palette/hex colors and an eyedropper. Paint layers participate in normal ordering with images and text.
 - 4K working canvas with vector stroke storage, zoom to 24×, pan, and upright panel focus.
 - Layer selection, drag, scale, quarter turns, mirror, opacity, brightness, saturation, ordering, visibility, locking, duplication, and deletion.
 - Largest safe rectangles calculated from official template paint islands. Fitting uses panel orientation and preserves a margin around the subject.
 - Undo/redo and local IndexedDB recovery per vehicle, plus portable JSON project save/open. One recovery draft per vehicle; save separate project files for the children.
-- Top-down, split view, and rotatable Three.js shape preview. Raycast drawing on mapped 3D patches feeds the same editable ink stack.
+- 2D-only editing on the complete official template. Panel zoom uses the full panel bounds; safe rectangles are used only to fit objects.
 - Exact-mask PNG export, sanitized filenames, conservative 1,000,000-byte maximum, native template aspect ratio, and smaller valid output sizes when necessary.
 - Editable BFDI sample with separate Flower, Bubble, X, Grassy and title layers. Black Hole is part of the sample background.
 
-The 3D preview is an **approximate composition study**. Tesla's repository contains PNG templates, not meshes. It uses an original low-poly body with safe-area hood/door/rear mappings, not a Tesla model. Cybertruck mapping is explicitly unavailable. Do not use it as evidence that every model's orientation or geometry is exact. See [the family test guide](FAMILY-TEST.md) for release gates.
+The inaccurate 3D preview and painting path have been removed from the app. Its rectangle-based cropping/stretching did not reproduce the template. `preview.js` is retained as inactive prototype source only; the editor neither imports it nor loads Three.js. Existing artwork is preserved in the same layer document, including strokes originally made using the prototype. Any future 3D implementation must satisfy [the full-panel mapping acceptance requirements](EXACT-3D.md) before appearing in the editor.
 
 ## AI design skill
 

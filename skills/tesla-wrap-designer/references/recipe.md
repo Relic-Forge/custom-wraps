@@ -1,6 +1,6 @@
 # Recipe and export
 
-From the `custom-wraps` repository, run `npm install` and `npm run prepare:studio` if dependencies/catalog are missing.
+Resolve the package root from `SKILL.md`. Run `npm ci` inside its `runtime/` directory once to install the pinned dependency. Run the commands below from that directory, or use absolute paths resolved from the package location. All templates and catalog data are already bundled; no repository clone or catalog generation is needed.
 
 Read panel IDs or labels from `studio/vehicles.json`; do not invent IDs. The generator derives safe rectangles from the alpha channel, not guessed bounding boxes. A rectangle with 88% fit leaves breathing room.
 
@@ -19,7 +19,9 @@ Example (asset paths resolve relative to the recipe file):
 }
 ```
 
-`background` is optional. Use a full texture here, not a template-shaped image with opaque windows. Each artwork file should have transparent padding and a complete subject. `rotation` optionally overrides panel rotation (0, 90, -90, 180). Do not override from intuition alone for unfamiliar templates.
+`background` is optional. Use an orientation-neutral full texture here, such as abstract color or scattered star points, not a directional sky/ground scene or a template-shaped image with opaque windows. Place directional scenery as upright per-panel artwork, with the same export transform as its subjects. A scene asset can group its environment and characters for consistent rotation; preserve separate source assets for later edits. Each cutout should have transparent padding and a complete subject. `rotation` optionally overrides panel rotation (0, 90, -90, 180). Do not override from intuition alone for unfamiliar templates.
+
+The helper safe-fits artwork to rectangles; it does not art-direct scenes, provide arbitrary panel-edge bleed, or guarantee seamless cross-panel landscapes. Inspect its result and refine the editable project when needed. Keep the design brief and placement/orientation map in companion notes, not unsupported recipe fields. Follow the [art-direction acceptance pass](art-direction.md) after export.
 
 ```sh
 node scripts/compose-wrap.mjs /absolute/path/recipe.json /absolute/path/output
@@ -27,6 +29,22 @@ node scripts/compose-wrap.mjs /absolute/path/recipe.json /absolute/path/output
 
 Output: PNG, `.wrap-project.json`, `.validation.json`. PNG uses a 1024-pixel width where possible and smaller sizes only if needed to stay below a conservative 1,000,000-byte limit. Preserve native aspect ratio: Cybertruck is 1024×768; the other current templates are 1024×1024. Both dimensions remain between 512 and 1024 at every fallback size. Alpha is copied from the selected template at that output size. Truecolor PNG is retained; excessive complexity fails rather than silently emitting an oversized file. Name including `.png` is at most 30 characters.
 
-The editor accepts version 2 projects with `vehicle`, `baseColor`, `accentColor`, `pattern`, `layers`. Image layers contain embedded PNG data URLs, intrinsic width/height, x/y center, scale, degree rotation, and opacity. Text layers have `text`, `fontSize`, `color` and transforms. Drawing layers have `points` of [x,y,pressure], `size`, `color` and `erase`; drawing remains in its own erasable stack above photo/text layers.
+The report must have `passed: true`, all `checks` true, `alphaDifferences: 0`, and a SHA-256 identifying the delivered file. To check a final file independently:
+
+```sh
+node scripts/validate-wrap.mjs /absolute/path/My_Wrap.png modely-2025-premium
+```
+
+For a child's drawing on the full flat canvas, preserve the canvas frame and orientation. Do not crop, add borders, or rotate the saved image. The child may rotate their drawing app's view while drawing. The finished source can be larger than the export size or have flattened gaps; finalize it with:
+
+```sh
+node scripts/finish-drawing.mjs /absolute/path/drawing.png modely-2025-premium /absolute/path/output My_Drawing
+```
+
+This removes gap artwork using the official mask, converts to sRGB PNG, resizes proportionally, and validates the file. It cannot repair misaligned/cropped artwork or remove guide labels painted into a body panel. A mismatched aspect ratio is rejected, not stretched. It produces a PNG and validation report, not reconstructed editable layers. Preserve the original drawing separately.
+
+Tesla's published requirements were checked on 2026-09-20 against [the official repository](https://github.com/teslamotors/custom-wraps#requirements--setup). Transfer using Tesla mobile app 4.59.0+ → Creations → Wrap → Upload, or a `Wraps` folder on a supported USB drive; apply in Toybox → Paint Shop → Wraps. Verify current instructions if the user reports a changed interface or before updating the packaged format contract. File-format validation does not test account, app, firmware, or vehicle compatibility.
+
+The editor accepts versions 1–3 with `vehicle`, `baseColor`, `accentColor`, `pattern`, `layers`. The compositor produces version 2 image/text projects; the editor upgrades them on load. Image layers contain embedded PNG data URLs, intrinsic width/height, x/y center, scale, degree rotation, and opacity. Text layers have `text`, `fontSize`, `color` and transforms. Version 3 paint layers have `type: "paint"`, `strokes`, opacity, visibility, lock and name; their transforms remain x/y 0, scale 1, rotation 0. Each stroke has `type: "stroke"`, `points` of [x,y,pressure], `size`, `color`, `erase`, opacity and transforms. Erasing is isolated to that paint layer. Legacy top-level strokes migrate together into one paint layer above image/text layers to preserve the old appearance.
 
 Use the helper's editable output rather than flattening the entire design into one image layer. Keep the source cutouts and recipe so later character replacements need only a local revision.

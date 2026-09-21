@@ -254,8 +254,8 @@ output {
   flex-wrap: wrap;
 }
 #swatches button {
-  width: 19px;
-  height: 19px;
+  width: 25px;
+  height: 25px;
   border-radius: 50%;
   padding: 0;
   border: 2px solid #ffffff30;
@@ -388,6 +388,21 @@ footer {
   overflow: auto;
   display: grid;
   gap: 5px;
+}
+#addPaintLayer {
+  margin: 0 0 10px;
+  color: var(--gold);
+}
+#activePaintLayer {
+  margin-bottom: 12px;
+  color: var(--gold);
+}
+#colorHex {
+  margin-top: 8px;
+  font-family: monospace;
+}
+#tools button {
+  min-height: 42px;
 }
 .layer {
   display: flex;
@@ -528,9 +543,585 @@ footer {
   }
 }
 @media (max-width: 560px) {
-  main { grid-template-columns: 1fr; }
-  .left, .right { grid-column: 1; }
-  .workspace { min-height: 580px; }
-  .canvases.split { flex-direction: column; min-height: 760px; }
-  .brand h1 { font-size: 20px; }
+  main {
+    grid-template-columns: 1fr;
+  }
+  .left,
+  .right {
+    grid-column: 1;
+  }
+  .workspace {
+    min-height: 580px;
+  }
+  .canvases.split {
+    flex-direction: column;
+    min-height: 760px;
+  }
+  .brand h1 {
+    font-size: 20px;
+  }
+}
+
+/* A drawing desk: tools left, artwork middle, simple layer stack right. */
+button,
+.button {
+  font-size: 13px;
+  min-height: 38px;
+}
+label {
+  font-size: 12px;
+}
+h2 {
+  font-size: 14px;
+}
+summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 10px 0;
+}
+details[open] > summary {
+  color: var(--purple);
+}
+.color-code summary {
+  padding: 7px 0 0;
+  font-size: 11px;
+}
+.layer-row {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+.layer-row .layer {
+  flex: 1;
+  min-width: 0;
+}
+.layer-eye {
+  flex: 0 0 34px;
+  padding: 4px;
+  color: var(--muted);
+}
+.layer .name small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 3px;
+  font-weight: 400;
+}
+.layer .thumb {
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+}
+#layerList {
+  max-height: 250px;
+}
+#activePaintLayer {
+  font-size: 11px;
+  line-height: 1.4;
+  margin: 0 0 12px;
+  overflow-wrap: anywhere;
+}
+#tools {
+  grid-template-columns: 1fr 1fr;
+}
+#tools button {
+  min-height: 46px;
+  font-size: 13px;
+}
+#brushOptions {
+  margin-top: 14px;
+}
+#brushOptions input[type="range"] {
+  min-height: 28px;
+}
+.upload {
+  margin-top: 0;
+  padding: 12px;
+}
+.header-actions .button {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+}
+.preview-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 2;
+  min-height: 30px;
+  padding: 5px 10px;
+  font-size: 11px;
+  color: var(--gold);
+  background: #30291e;
+  border-color: #ffc78340;
+}
+.preview-controls {
+  flex-wrap: wrap;
+}
+#validation:empty {
+  display: none;
+}
+dialog {
+  color: #ecebf3;
+  background: #211e2c;
+  border: 1px solid #b5a3ff55;
+  border-radius: 20px;
+  width: min(540px, 90vw);
+  padding: 28px;
+  max-height: 85dvh;
+}
+dialog::backdrop {
+  background: #09070ecc;
+}
+dialog h2 {
+  font-size: 24px;
+}
+dialog p {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #c7c3d5;
+}
+.close-help {
+  float: right;
+}
+#toolHint {
+  text-align: right;
+}
+#swatches button {
+  width: 26px;
+  height: 26px;
+  min-height: 26px;
+  flex-shrink: 0;
+}
+.add-object {
+  margin: 0 0 12px;
+  color: var(--gold);
+}
+.canvas-title {
+  color: var(--purple);
+  font-weight: 650;
+  font-size: 14px;
+}
+/* Kid-first desk: one small palette, no permanent inspector sidebar. */
+main {
+  grid-template-columns: 190px minmax(0, 1fr);
+}
+
+.left {
+  padding: 16px 12px;
+}
+.left section {
+  border: 0;
+  padding: 0;
+}
+.left h2,
+.stage-bottom,
+#toolHint {
+  display: none;
+}
+#tools {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#tools button {
+  text-align: left;
+  padding: 12px;
+}
+#swatches {
+  gap: 7px;
+}
+#swatches button {
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+}
+#brushOptions > .row {
+  flex-direction: column-reverse;
+  align-items: stretch;
+}
+#brushColor {
+  width: 100%;
+  height: 32px;
+}
+.workspace-bar {
+  gap: 12px;
+  flex-wrap: wrap;
+}
+#partPicker {
+  min-width: 160px;
+  max-width: 260px;
+  flex: 1;
+}
+#partPicker select {
+  margin: 0;
+}
+.rotation-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 12px 0 2px;
+}
+.rotation-bar label {
+  margin: 0;
+  white-space: nowrap;
+}
+.rotation-bar input {
+  width: min(180px, 20vw);
+  margin: 0;
+}
+.rotation-bar button {
+  min-height: 44px;
+  color: var(--purple);
+}
+#settingsDialog section {
+  margin: 18px 0;
+}
+#layersDialog section {
+  margin: 18px 0;
+}
+#layersDialog #layerList {
+  max-height: 36vh;
+}
+#layersDialog #transformControls {
+  border: 0;
+}
+#saveStatus {
+  font-size: 11px;
+}
+@media (max-width: 800px) {
+  main {
+    grid-template-columns: 135px minmax(0, 1fr);
+  }
+  .workspace {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .left {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .rotation-bar {
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .rotation-bar button {
+    padding: 8px;
+  }
+  #saveStatus,
+  .brand small {
+    display: none;
+  }
+  .header-actions {
+    gap: 5px;
+  }
+}
+#addDialog .row {
+  margin-top: 15px;
+}
+@media (max-width: 560px) {
+  .header-actions {
+    gap: 5px;
+  }
+  .header-actions button,
+  .header-actions .button {
+    padding: 8px;
+  }
+  .workspace-bar .segmented {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .workspace-bar .segmented button {
+    flex: 1;
+  }
+}
+
+#choosePart {
+  width: 100%;
+  min-height: 44px;
+  text-align: left;
+}
+#partCards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.part-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+}
+.part-card canvas {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  background: #11121c;
+  border-radius: 8px;
+}
+.part-card span {
+  overflow-wrap: anywhere;
+}
+#colorsDialog #swatches {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+#colorsDialog #swatches button {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  max-width: 54px;
+  justify-self: center;
+}
+#colorsDialog #brushOptions > .row {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 14px;
+}
+#colorsDialog #brushColor {
+  width: 100%;
+  height: 44px;
+  cursor: pointer;
+}
+.brush-choices {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 12px 0 20px;
+}
+.brush-choices button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px;
+}
+.brush-choices button span {
+  font-size: 30px;
+}
+@media (max-width: 480px) {
+  #partCards {
+    grid-template-columns: 1fr;
+  }
+  #colorsDialog #swatches {
+    gap: 5px;
+  }
+}
+
+.custom-color-area {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 180px;
+  justify-content: center;
+  align-items: center;
+  column-gap: 16px;
+}
+.custom-color-area .custom-color-control {
+  grid-row: 1 / 3;
+  grid-column: 1;
+}
+.custom-color-area > label:not(.custom-color-control) {
+  grid-column: 2;
+  margin: 0;
+  align-self: end;
+}
+.custom-color-area #colorHex {
+  grid-column: 2;
+  width: 100%;
+  margin: 4px 0 0;
+  align-self: start;
+  text-align: center;
+}
+.custom-color-control {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 180px;
+  min-height: 64px;
+  margin: 6px auto;
+  border: 1px solid #ffffff55;
+  border-radius: 16px;
+  color: white;
+  background: linear-gradient(
+    115deg,
+    #b72754,
+    #9040b7,
+    #295dba,
+    #117873,
+    #387b3d,
+    #88631d
+  );
+  box-shadow: inset 0 1px 0 #ffffff35;
+  cursor: pointer;
+  font-weight: 650;
+}
+.custom-color-control svg {
+  width: 34px;
+  height: 42px;
+}
+.custom-color-control:focus-within {
+  outline: 3px solid var(--purple);
+  outline-offset: 3px;
+}
+#colorsDialog .custom-color-control #brushColor {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+/* Touch-sized picture toolbar. Small screens put it beneath the paper. */
+main {
+  grid-template-columns: 76px minmax(0, 1fr);
+}
+.left {
+  padding: 12px 8px;
+}
+#tools button,
+#openAdd,
+#openLayers,
+#openSettings {
+  min-width: 48px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+.current-color {
+  display: block;
+  width: 28px;
+  height: 28px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--ink, #ffb84d);
+}
+#colorsDialog #swatches button {
+  width: 100%;
+  height: auto;
+  min-height: 44px;
+}
+#colorsDialog #brushOptions > .row {
+  align-items: flex-start;
+}
+#colorsDialog #brushColor {
+  width: 100%;
+  height: 44px;
+}
+.rotation-bar output {
+  margin-left: 5px;
+}
+.rotation-bar button {
+  width: 48px;
+}
+.workspace,
+.canvases,
+.stage {
+  min-height: 0;
+}
+#stage {
+  touch-action: none;
+}
+@media (max-width: 800px) {
+  header {
+    height: 64px;
+    min-height: 64px;
+    padding: 6px 10px;
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  .brand-icon,
+  .brand small {
+    display: none;
+  }
+  .brand h1 {
+    font-size: 17px;
+  }
+  .header-actions {
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+  main {
+    height: calc(100dvh - 64px);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .workspace {
+    grid-column: 1;
+    grid-row: 1;
+    min-height: 0;
+    padding: 8px;
+    gap: 8px;
+  }
+  .left {
+    grid-column: 1;
+    grid-row: 2;
+    overflow: auto;
+    padding: 6px 10px max(6px, env(safe-area-inset-bottom));
+    border: 0;
+    border-top: 1px solid var(--line);
+  }
+  .left section {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 0;
+  }
+  #tools {
+    flex-direction: row;
+    gap: 8px;
+  }
+  #openAdd {
+    width: 48px;
+    margin: 0;
+  }
+  .workspace-bar {
+    flex-wrap: nowrap;
+    gap: 5px;
+  }
+  #partPicker {
+    min-width: 0;
+  }
+  #partPicker select {
+    min-height: 44px;
+    padding: 5px;
+    font-size: 12px;
+  }
+  .workspace-bar .row {
+    gap: 4px;
+  }
+  .workspace-bar button {
+    min-height: 44px;
+    min-width: 36px;
+  }
+  #zoomOut,
+  #zoomIn,
+  #zoomValue {
+    display: none;
+  }
+  .rotation-bar {
+    padding: 0;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .rotation-bar input {
+    width: min(130px, 30vw);
+    min-height: 44px;
+  }
+  footer {
+    display: none;
+  }
+  dialog {
+    padding: 18px;
+    width: calc(100vw - 24px);
+    max-height: 85dvh;
+  }
 }

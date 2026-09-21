@@ -3,51 +3,40 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Relic Forge · Wrap Studio</title>
-    <link rel="stylesheet" href="styles.css" />
-    <script type="importmap">
-      { "imports": { "three": "./vendor/three.module.js" } }
-    </script>
+    <title>That's a Wrap</title>
+    <link rel="stylesheet" href="styles.css?v=0.7.3" />
   </head>
   <body>
     <header>
       <div class="brand">
         <span class="brand-icon">✳</span>
         <div>
-          <small>RELIC FORGE</small>
-          <h1>Wrap Studio <span>family lab</span></h1>
+          <h1>That's a Wrap</h1>
         </div>
       </div>
       <div class="header-actions">
-        <span id="saveStatus" role="status">Local workspace</span
-        ><button id="saveProject">Save project</button
-        ><label class="button" for="projectUpload">Open project</label
+        <button id="openHelp" aria-label="Help">? Help</button>
+        <span id="saveStatus" role="status">On this device</span
+        ><button id="saveProject">Save</button
+        ><label class="button" for="projectUpload">Open</label
         ><input hidden id="projectUpload" type="file" accept=".json" /><button
           class="primary"
           id="exportButton"
         >
-          Export for Tesla ↗
+          Download wrap ↗
         </button>
       </div>
     </header>
     <main>
       <aside class="sidebar left">
         <section>
-          <p class="eyebrow">YOUR CANVAS, ON WHEELS</p>
-          <label for="vehicle">Choose your Tesla</label
+          <label for="vehicle">Your car</label
           ><select id="vehicle"></select
           ><img id="vehiclePhoto" alt="Selected Tesla" class="vehicle-photo" />
-          <p class="muted">
-            Design the car on your Tesla screen. Photos and drawings stay in
-            this browser.
-          </p>
         </section>
         <section>
-          <h2>Start with something</h2>
-          <label class="upload" for="artUpload"
-            >＋ Add a photo or artwork<small
-              >PNG, JPEG, WebP · drop onto the canvas</small
-            ></label
+          <h2>Add something</h2>
+          <label class="upload" for="artUpload">＋ Photo</label
           ><input
             hidden
             id="artUpload"
@@ -58,16 +47,25 @@
           <div class="row">
             <input
               id="textInput"
-              placeholder="A name, a thought…"
+              placeholder="Your words…"
               maxlength="100"
               aria-label="Text to add"
             /><button id="addText">＋ Text</button>
           </div>
-          <button id="demo" class="wide">Open our BFDI design ✨</button
-          ><button id="newProject" class="wide">Start a fresh design</button>
+          <details>
+            <summary>Start over or try an example</summary>
+            <button id="demo" class="wide">Try BFDI ✨</button
+            ><button id="newProject" class="wide">New drawing</button>
+          </details>
         </section>
         <section>
-          <h2>Make your mark</h2>
+          <h2>Tools</h2>
+          <button id="openAdd" class="wide add-object">
+            ＋ Photo or words
+          </button>
+          <p id="activePaintLayer" class="muted">
+            Choose a paint layer to begin.
+          </p>
           <div id="tools" class="tools">
             <button
               data-tool="select"
@@ -88,21 +86,52 @@
               aria-pressed="false"
               title="Pan canvas (H)"
             >
-              ✋ Pan
+              ✋ Move view
+            </button>
+            <button
+              data-tool="picker"
+              aria-pressed="false"
+              title="Pick a color (I)"
+            >
+              ◉ Pick color
             </button>
           </div>
-          <label for="brushColor">Brush color</label>
-          <div class="row">
-            <input id="brushColor" type="color" value="#ffb84d" />
-            <div id="swatches"></div>
+          <div id="brushOptions">
+            <label for="brushPreset">Brush</label>
+            <select id="brushPreset">
+              <option value="pen">Round pen</option>
+              <option value="pencil">Fine pencil</option>
+              <option value="marker">Broad marker</option>
+            </select>
+            <label for="brushColor">Color</label>
+            <div class="row">
+              <input id="brushColor" type="color" value="#ffb84d" />
+              <div id="swatches"></div>
+            </div>
+            <details class="color-code">
+              <summary>Color code</summary>
+              <input
+                id="colorHex"
+                aria-label="Color hex code"
+                value="#ffb84d"
+                maxlength="7"
+                spellcheck="false"
+              />
+            </details>
+            <label for="brushSize"
+              >Size <output id="brushSizeValue">8 px</output></label
+            ><input id="brushSize" type="range" min="1" max="80" value="8" />
+            <label for="brushOpacity"
+              >Strength <output id="brushOpacityValue">100%</output></label
+            >
+            <input
+              id="brushOpacity"
+              type="range"
+              min="1"
+              max="100"
+              value="100"
+            />
           </div>
-          <label for="brushSize"
-            >Brush size <output id="brushSizeValue">8 px</output></label
-          ><input id="brushSize" type="range" min="1" max="80" value="8" />
-          <p class="muted">
-            Pencil pressure supported. Eraser removes drawing strokes; photos
-            stay on their own layers.
-          </p>
         </section>
         <section>
           <h2>Background</h2>
@@ -123,31 +152,25 @@
           </div>
         </section>
         <section>
-          <h2>Imagination to artwork</h2>
-          <textarea
-            id="idea"
-            rows="3"
-            placeholder="A moon explorer with rainbow cats…"
-            aria-label="Wrap idea"
-          ></textarea
-          ><button id="copyBrief" class="wide">Copy AI design brief</button>
-          <p class="muted">
-            Use the wrap-designer skill in Codex to create artwork, then open
-            its editable project here.
-          </p>
+          <details>
+            <summary>AI ideas</summary>
+            <textarea
+              id="idea"
+              rows="3"
+              placeholder="A moon explorer with rainbow cats…"
+              aria-label="Wrap idea"
+            ></textarea
+            ><button id="copyBrief" class="wide">Copy AI design brief</button>
+          </details>
         </section>
       </aside>
       <section class="workspace">
         <div class="workspace-bar">
-          <div class="segmented">
-            <button id="flatView" aria-pressed="true">Top-down</button
-            ><button id="splitView" aria-pressed="false">Split view</button
-            ><button id="threeView" aria-pressed="false">3D preview</button>
-          </div>
+          <div id="partPicker"></div>
           <div class="row">
             <button id="undo" title="Undo (⌘Z)" aria-label="Undo">↶</button
             ><button id="redo" title="Redo (⌘⇧Z)" aria-label="Redo">↷</button
-            ><button id="fitView">Fit</button
+            ><button id="fitView">See all</button
             ><button id="zoomOut" aria-label="Zoom out">−</button
             ><output id="zoomValue">100%</output
             ><button id="zoomIn" aria-label="Zoom in">＋</button>
@@ -168,68 +191,74 @@
               aria-hidden="true"
             ></canvas
             ><span class="stage-label"
-              >FLAT TEMPLATE <span id="panelHint">· All panels</span></span
-            ><span class="stage-bottom"
-              >Scroll to zoom · Space + drag to pan · B to draw</span
+              >FLAT · EXPORT TEMPLATE
+              <span id="panelHint">· All panels</span></span
+            ><span class="stage-bottom" id="canvasHint"
+              >Draw on the colored shapes</span
             >
           </div>
-          <div id="preview" hidden>
-            <div class="stage-label">3D SHAPE STUDY</div>
-            <div id="previewCanvas"></div>
-            <div class="preview-controls">
-              <button id="resetCamera">Reset angle</button
-              ><button id="paint3d" aria-pressed="false">Draw on 3D</button>
-            </div>
-            <p id="previewNotice">
-              Approximate body and panel placement; check the exported design on
-              your Tesla.
-            </p>
-          </div>
+        </div>
+        <div class="rotation-bar" aria-label="Turn your canvas">
+          <button id="turnCanvasLeft" aria-label="Turn canvas left">
+            ↶ Turn left
+          </button>
+          <label for="canvasAngle"
+            >Tilt <output id="canvasAngleValue">0°</output></label
+          >
+          <input
+            id="canvasAngle"
+            aria-label="Canvas tilt"
+            type="range"
+            min="-180"
+            max="180"
+            step="1"
+            value="0"
+          />
+          <button id="turnCanvasRight" aria-label="Turn canvas right">
+            Turn right ↷
+          </button>
         </div>
         <footer>
           <span id="status" role="status">Preparing your workspace…</span
-          ><span>PNG · 512–1024 px · ≤ 1 MB</span>
+          ><span id="toolHint">Draw on the colored shapes</span>
         </footer>
       </section>
       <aside class="sidebar right">
         <section>
-          <p class="eyebrow">DESIGNED FOR THE PANEL</p>
-          <h2>Place it beautifully</h2>
-          <label for="panel">Art placement</label
+          <h2>Car parts</h2>
+          <label for="panel">Choose a part</label
           ><select id="panel">
             <option value="">Whole template</option>
           </select>
           <div class="row">
-            <button id="placePanel">Fit artwork here</button
+            <button id="placePanel">Fit object</button
             ><button id="focusPanel">Zoom here</button>
           </div>
           <label class="check"
             ><input id="showGuide" type="checkbox" checked /> Show safe
-            placement guides</label
+            area</label
           >
-          <p id="panelNote" class="muted">
-            Pick a panel to place a complete character with room around its
-            edges.
-          </p>
+          <p id="panelNote" class="muted" hidden></p>
         </section>
         <section>
           <div class="row between">
             <h2>Layers</h2>
             <span id="layerCount">0</span>
           </div>
+          <button id="addPaintLayer" class="wide">＋ Drawing layer</button>
           <div id="layerList"></div>
           <p id="emptyLayers" class="muted">
-            Your photos, words, and drawings will appear here.
+            Start drawing. Your first layer appears here.
           </p>
           <div id="transformControls" hidden>
             <div id="textEditControls" hidden>
-              <label for="editText">Words on the car</label
+              <label for="editText">Words</label
               ><input id="editText" maxlength="100" /><label for="textColor"
                 >Text color</label
               ><input id="textColor" type="color" />
             </div>
-            <label for="layerName">Layer name</label
-            ><input id="layerName" /><label for="scale"
+            <label for="layerName">Name</label><input id="layerName" /><label
+              for="scale"
               >Size <output id="scaleValue"></output></label
             ><input
               id="scale"
@@ -245,33 +274,31 @@
               ><button id="rotateRight">↷ 90°</button>
             </div>
             <label for="opacity"
-              >Opacity <output id="opacityValue"></output></label
-            ><input
-              id="opacity"
-              type="range"
-              min="0"
-              max="100"
-              value="100"
-            /><label for="brightness">Brightness</label
-            ><input
-              id="brightness"
-              type="range"
-              min="20"
-              max="180"
-              value="100"
-            /><label for="saturation">Color intensity</label
-            ><input
-              id="saturation"
-              type="range"
-              min="0"
-              max="200"
-              value="100"
-            />
+              >Layer strength <output id="opacityValue"></output></label
+            ><input id="opacity" type="range" min="0" max="100" value="100" />
+            <details id="photoAdjustments">
+              <summary>Photo colors</summary>
+              <label for="brightness">Brightness</label
+              ><input
+                id="brightness"
+                type="range"
+                min="20"
+                max="180"
+                value="100"
+              /><label for="saturation">Color intensity</label
+              ><input
+                id="saturation"
+                type="range"
+                min="0"
+                max="200"
+                value="100"
+              />
+            </details>
             <div class="tools">
               <button id="duplicateLayer">Duplicate</button
               ><button id="flipLayer">Mirror</button
-              ><button id="raiseLayer">Bring forward</button
-              ><button id="lowerLayer">Send backward</button
+              ><button id="raiseLayer">↑ Forward</button
+              ><button id="lowerLayer">↓ Backward</button
               ><button id="toggleVisible">Hide / show</button
               ><button id="toggleLock">Lock / unlock</button
               ><button id="deleteLayer" class="danger">Delete layer</button>
@@ -279,21 +306,66 @@
           </div>
         </section>
         <section>
-          <h2>Ready for a drive?</h2>
+          <h2>Your wrap</h2>
           <label for="fileName">Wrap name</label
           ><input id="fileName" value="My_Family_Wrap" maxlength="26" />
-          <p id="validation" class="muted" aria-live="polite">
-            Export checks size, name, PNG format, and the official template
-            mask.
-          </p>
-          <p class="muted">
-            Save an editable project to come back later. A PNG is your finished
-            picture.
-          </p>
+          <p id="validation" class="muted" aria-live="polite"></p>
         </section>
       </aside>
     </main>
     <div id="toast" role="status"></div>
-    <script type="module" src="app.js"></script>
+    <dialog id="helpDialog" aria-labelledby="helpTitle">
+      <form method="dialog">
+        <button class="close-help" aria-label="Close help">✕</button>
+      </form>
+      <h2 id="helpTitle">Make it yours</h2>
+      <p>
+        <b>Draw, add a photo, or add words.</b> Choose colors and a brush on the
+        left.
+      </p>
+      <p>
+        <b>Layers are see-through sheets.</b> Draw on one without changing the
+        others. The top sheet appears in front. Select a sheet to edit it; Hide
+        and Undo let you experiment.
+      </p>
+      <p>
+        <b>Choose a car part above the canvas.</b> It turns upright and zooms in
+        automatically. Gray gaps are not part of the car.
+      </p>
+      <p>
+        <b>Turn the paper, not your head.</b> Turn left and Turn right rotate
+        the canvas. Tilt lets you choose any angle. “See all” resets the view.
+        None of these change your exported artwork. Scroll to zoom.
+      </p>
+      <p>
+        <b>Save keeps editable layers.</b> Download wrap makes the PNG for a
+        parent to upload to Tesla. It changes the car on the screen, not the
+        real paint.
+      </p>
+      <p class="muted">
+        B: draw · E: erase · I: pick color · Space + drag: move flat view · [ /
+        ]: brush size · ⌘/Ctrl Z: undo. Photos stay on this device. Test touch
+        and stylus behavior on your device.
+      </p>
+    </dialog>
+    <dialog id="addDialog" aria-label="Add photo or words">
+      <form method="dialog">
+        <button class="close-help" aria-label="Close add menu">✕</button>
+      </form>
+    </dialog>
+    <dialog id="layersDialog" aria-label="Layers">
+      <form method="dialog">
+        <button class="close-help" aria-label="Close layers">Done</button>
+      </form>
+    </dialog>
+    <dialog id="settingsDialog" aria-label="Project settings">
+      <form method="dialog">
+        <button class="close-help" aria-label="Close project settings">
+          Done
+        </button>
+      </form>
+      <h2>Your project</h2>
+    </dialog>
+    <script type="module" src="app.js?v=0.8.0"></script>
   </body>
 </html>

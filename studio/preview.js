@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "./vendor/OrbitControls.js";
-// An original low-poly shape study. Tesla does not supply an official UV mesh.
+// An original low-poly shape study, not a verified Tesla mesh.
 // Each paint surface maps a conservative rectangle of one real template island.
 export function createPreview(host, source, paint) {
   const scene = new THREE.Scene();
@@ -320,8 +320,8 @@ export function createPreview(host, source, paint) {
     document.getElementById("paint3d").setAttribute("aria-pressed", "false");
     document.getElementById("previewNotice").textContent =
       v.preview === "unmapped"
-        ? "Cybertruck shape only. Its different panel layout needs a verified 3D mapping; use top-down to edit."
-        : "Approximate body; hood, door and rear safe areas shown. Fenders and full-panel distortion need a verified mesh.";
+        ? "View only · Draw in Flat."
+        : "Placement unverified · Check in Flat.";
     update();
   }
   function resize() {
@@ -341,6 +341,26 @@ export function createPreview(host, source, paint) {
   function update() {
     texture.needsUpdate = true;
   }
+  const homeDistance = Math.hypot(6, 4 - 0.85, 7);
+  function getZoom() {
+    return Math.round(
+      (homeDistance / camera.position.distanceTo(controls.target)) * 100,
+    );
+  }
+  function zoomBy(factor) {
+    const direction = camera.position.clone().sub(controls.target);
+    direction.setLength(
+      THREE.MathUtils.clamp(
+        direction.length() / factor,
+        controls.minDistance,
+        controls.maxDistance,
+      ),
+    );
+    camera.position.copy(controls.target).add(direction);
+    controls.update();
+    paint.viewChanged?.();
+  }
+  controls.addEventListener("change", () => paint.viewChanged?.());
   const ray = new THREE.Raycaster();
   function at(e) {
     const r = renderer.domElement.getBoundingClientRect();
@@ -351,8 +371,9 @@ export function createPreview(host, source, paint) {
       ),
       camera,
     );
-    const hit = ray.intersectObjects(surfaces)[0];
-    return hit
+    // Respect glass/body occlusion: never paint a far-side patch through windows.
+    const hit = ray.intersectObjects(car.children, true)[0];
+    return hit && surfaces.includes(hit.object)
       ? {
           x: hit.uv.x * 1024,
           y: (1 - hit.uv.y) * 1024,
@@ -361,13 +382,13 @@ export function createPreview(host, source, paint) {
       : null;
   }
   renderer.domElement.addEventListener("pointerdown", (e) => {
-    if (!painting) return;
+    if (!painting || active || e.button !== 0) return;
     const p = at(e);
     if (p) {
-      active = true;
+      active = paint.start(p, e) !== false;
+      if (!active) return;
       lastPanel = p.id;
       renderer.domElement.setPointerCapture(e.pointerId);
-      paint.start(p, e);
     }
   });
   renderer.domElement.addEventListener("pointermove", (e) => {
@@ -397,7 +418,13 @@ export function createPreview(host, source, paint) {
     resize,
     reset,
     update,
+    zoomBy,
+    getZoom,
     setPainting(value) {
+      if (painting && !value && active) {
+        paint.end();
+        active = false;
+      }
       painting = value;
       controls.enabled = !value;
     },
