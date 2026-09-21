@@ -1,5 +1,5 @@
 import { pinchView } from "./view-gesture.js";
-import { mountArtWheel } from "./art-wheel.js?v=0.11.2";
+import { mountArtWheel } from "./art-wheel.js?v=0.11.3";
 import {
   SIZE,
   MAX_BYTES,
@@ -1830,6 +1830,7 @@ $("copyBrief").onclick = async () => {
   }
 };
 mountArtWheel({
+  settings: $("editorSettings"),
   stage: $("stage"),
   trigger: document.querySelector('[data-tool="brush"]'),
   getSize: () => Number($("brushSize").value),

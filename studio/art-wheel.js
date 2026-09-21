@@ -5,6 +5,7 @@ export function mountArtWheel({
   setSize,
   select,
   current,
+  settings,
 }) {
   const items = [
     ["pencil", "Pencil", "✏️"],
@@ -30,9 +31,9 @@ export function mountArtWheel({
     moved = false,
     audio = null,
     lastSound = 0;
-  let soundEnabled = false;
+  let soundEnabled = true;
   try {
-    soundEnabled = localStorage.getItem("wrap-selection-sound") === "on";
+    soundEnabled = localStorage.getItem("wrap-selection-sound") !== "off";
   } catch {}
   function sound(confirm = false) {
     if (!soundEnabled || performance.now() - lastSound < 65) return;
@@ -90,7 +91,7 @@ export function mountArtWheel({
     close();
   });
   const soundButton = document.createElement("button");
-  soundButton.className = "wheel-sound";
+  soundButton.className = "selection-sound-setting";
   soundButton.setAttribute("aria-label", "Selection sounds");
   function syncSound() {
     soundButton.textContent = soundEnabled ? "♪ Sound on" : "♪ Sound off";
@@ -108,7 +109,8 @@ export function mountArtWheel({
   const hint = document.createElement("p");
   hint.className = "wheel-size-hint";
   hint.textContent = "Point at a tool · scroll to resize · release";
-  sizing.append(label, slider, hint, soundButton);
+  sizing.append(label, slider, hint);
+  settings?.append(soundButton);
   wheel.append(sizing);
   document.body.append(wheel);
   function syncSize() {

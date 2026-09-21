@@ -56,11 +56,13 @@ test("wheel selects with a single right-button gesture, cancels in center, and s
     globalThis.innerWidth = 1200;
     globalThis.innerHeight = 900;
     globalThis.localStorage = { getItem: () => null, setItem() {} };
+    const settings = new Element();
     const stage = new Element(),
       trigger = new Element(),
       selected = [];
     let size = 8;
     mountArtWheel({
+      settings,
       stage,
       trigger,
       getSize: () => size,
@@ -69,6 +71,11 @@ test("wheel selects with a single right-button gesture, cancels in center, and s
       current: () => selected.at(-1) || "pen",
     });
     const wheel = doc.body.children[0];
+    const sound = settings.children[0];
+    assert.equal(sound.attrs["aria-pressed"], true);
+    assert.equal(wheel.contains(sound), false);
+    sound.onclick();
+    assert.equal(sound.attrs["aria-pressed"], false);
     stage.emit("pointerdown");
     assert.equal(wheel.hidden, false);
     stage.emit("pointermove", { clientY: 200 });
