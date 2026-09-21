@@ -146,6 +146,8 @@ function openFlyout(dialog) {
     if (other.open) other.close();
   dialog.show();
 }
+for (const drawer of [layersDialog, colorsDialog])
+  drawer.querySelector(".close-help").textContent = "Close ›";
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     for (const drawer of [layersDialog, colorsDialog])
@@ -1160,6 +1162,9 @@ function touchPosition(e) {
   };
 }
 $("stage").onpointerdown = (e) => {
+  // Choices apply immediately. Closing the drawer does not consume the stroke.
+  for (const drawer of [layersDialog, colorsDialog])
+    if (drawer.open) drawer.close();
   stopFocus();
   if (e.pointerType === "touch" && !busy) {
     touches.set(e.pointerId, touchPosition(e));
@@ -1382,6 +1387,7 @@ for (const color of [
 ]) {
   const b = document.createElement("button");
   b.style.background = color;
+  b.dataset.color = color;
   b.title = `Brush ${color}`;
   b.setAttribute("aria-label", b.title);
   b.onclick = () => {
@@ -1392,7 +1398,23 @@ for (const color of [
 function setBrushColor(color) {
   $("brushColor").value = color;
   colorButton.style.setProperty("--ink", color);
+  document.documentElement.style.setProperty("--selected-ink", color);
+  $("swatches")
+    .querySelectorAll("button")
+    .forEach((b) =>
+      b.setAttribute(
+        "aria-pressed",
+        b.dataset.color.toLowerCase() === color.toLowerCase(),
+      ),
+    );
+  customColor.classList.toggle(
+    "custom-selected",
+    ![...$("swatches").children].some(
+      (b) => b.dataset.color === color.toLowerCase(),
+    ),
+  );
 }
+setBrushColor($("brushColor").value);
 $("brushColor").oninput = () => setBrushColor($("brushColor").value);
 $("brushOpacity").oninput = () => {
   $("brushOpacityValue").textContent = $("brushOpacity").value + "%";

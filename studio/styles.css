@@ -995,6 +995,22 @@ dialog.editor-flyout[open] {
     height: calc(100dvh - 64px);
   }
 }
+.brush-choices button[aria-pressed="true"],
+#tools button[data-tool="brush"][aria-pressed="true"] {
+  box-shadow:
+    inset 0 -6px 0 var(--selected-ink, #ffb84d),
+    0 0 0 1px #ffffff70;
+  border-color: var(--selected-ink, #ffb84d);
+}
+#colorsDialog #swatches button[aria-pressed="true"] {
+  outline: 3px solid white;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px #15151f;
+}
+.custom-color-control.custom-selected {
+  outline: 3px solid var(--selected-ink);
+  outline-offset: 3px;
+}
 #quickTools {
   position: fixed;
   z-index: 30;
@@ -1224,5 +1240,63 @@ main {
     padding: 18px;
     width: calc(100vw - 24px);
     max-height: 85dvh;
+  }
+}
+/* Keep tools on the right at every screen size; drawers open alongside them. */
+main {
+  grid-template-columns: minmax(0, 1fr) 76px;
+  grid-template-rows: minmax(0, 1fr);
+}
+.workspace {
+  grid-column: 1;
+  grid-row: 1;
+}
+.left {
+  grid-column: 2;
+  grid-row: 1;
+  border-right: 0;
+  border-left: 1px solid var(--line);
+}
+dialog.editor-flyout {
+  right: 76px;
+  width: min(360px, calc(100vw - 100px));
+}
+@media (max-width: 800px) {
+  main {
+    grid-template-columns: minmax(0, 1fr) 60px;
+  }
+  .left {
+    padding: 8px 5px;
+    overflow: auto;
+  }
+  .left section,
+  #tools {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  #openAdd {
+    margin-bottom: 8px;
+  }
+  dialog.editor-flyout {
+    right: 60px;
+    width: min(340px, calc(100vw - 84px));
+    padding: 12px;
+  }
+  .workspace-bar {
+    flex-wrap: wrap;
+  }
+  #partPicker {
+    max-width: none;
+    flex-basis: 100%;
+  }
+  .brush-choices {
+    gap: 4px;
+  }
+  .brush-choices button {
+    padding: 8px 4px;
+  }
+  #colorsDialog.editor-flyout #swatches {
+    grid-template-columns: repeat(4, 1fr);
   }
 }
