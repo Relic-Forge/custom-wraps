@@ -1015,6 +1015,37 @@ dialog.editor-flyout[open] {
   outline: 3px solid var(--selected-ink);
   outline-offset: 3px;
 }
+#layerList {
+  display: flex;
+  flex-direction: column;
+}
+.layer-drag-ghost {
+  position: fixed;
+  z-index: 100;
+  pointer-events: none;
+  box-sizing: border-box;
+  padding: 8px;
+  border: 2px solid var(--gold);
+  border-radius: 12px;
+  background: #302b40;
+  box-shadow: 0 12px 32px #0008;
+  transform: scale(1.02);
+}
+.layer-drag-ghost .layer-grip,
+.layer-drag-ghost .layer-actions {
+  display: none;
+}
+.layer-drag-ghost .layer {
+  width: 100%;
+}
+#layersDialog .reordering {
+  opacity: 0.22;
+  border: 2px dashed var(--gold);
+}
+.layer-eye[aria-pressed="false"] {
+  color: #aaa;
+  background: #16151d;
+}
 #quickTools {
   position: fixed;
   z-index: 30;

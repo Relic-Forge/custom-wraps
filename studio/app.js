@@ -779,7 +779,7 @@ function updateUI() {
     n.append(kind);
     const badge = document.createElement("span");
     badge.className = "badge";
-    badge.textContent = l.locked ? "🔒" : l.visible === false ? "○" : "";
+    badge.textContent = l.locked ? "🔒" : l.visible === false ? "Hidden" : "";
     b.append(t, n, badge);
     b.onclick = () => {
       selected = l.id;
@@ -791,7 +791,7 @@ function updateUI() {
     row.className = "layer-row";
     const visibility = document.createElement("button");
     visibility.className = "layer-eye";
-    visibility.textContent = l.visible === false ? "○" : "◉";
+    visibility.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>${l.visible === false ? '<path d="M3 3 21 21" stroke-width="3"/>' : ""}</svg>`;
     visibility.setAttribute(
       "aria-label",
       `${l.visible === false ? "Show" : "Hide"} ${l.name}`,
@@ -833,43 +833,69 @@ function updateUI() {
     handle.title = "Drag to reorder";
     handle.setAttribute("aria-label", `Reorder ${l.name}`);
     handle.disabled = !!l.locked;
-    let destination = null;
+    let drag = null;
     handle.onpointerdown = (e) => {
       e.preventDefault();
       handle.setPointerCapture(e.pointerId);
+      const rect = row.getBoundingClientRect(),
+        ghost = row.cloneNode(true);
+      ghost.className = "layer-drag-ghost";
+      ghost.setAttribute("aria-hidden", "true");
+      ghost.style.width = rect.width + "px";
+      ghost.style.left = rect.left + "px";
+      ghost.style.top = rect.top + "px";
+      document.body.append(ghost);
+      drag = {
+        before: snapshot(),
+        order: [...state.layers],
+        ghost,
+        offset: e.clientY - rect.top,
+      };
       row.classList.add("reordering");
     };
     handle.onpointermove = (e) => {
-      if (!handle.hasPointerCapture(e.pointerId)) return;
+      if (!drag || !handle.hasPointerCapture(e.pointerId)) return;
+      drag.ghost.style.top = e.clientY - drag.offset + "px";
+      const drawer = layersDialog.getBoundingClientRect();
+      if (e.clientY > drawer.bottom - 50) layersDialog.scrollTop += 14;
+      if (e.clientY < drawer.top + 50) layersDialog.scrollTop -= 14;
       const target = document
         .elementFromPoint(e.clientX, e.clientY)
         ?.closest(".layer-row");
-      document
-        .querySelectorAll(".drop-target")
-        .forEach((el) => el.classList.remove("drop-target"));
-      destination = target?.dataset.layerId;
-      if (target && target !== row) target.classList.add("drop-target");
+      if (!target || target === row) return;
+      const from = state.layers.findIndex((x) => x.id === l.id),
+        to = state.layers.findIndex((x) => x.id === target.dataset.layerId);
+      state.layers.splice(from, 1);
+      state.layers.splice(to, 0, l);
+      // CSS order preserves pointer capture while the other rows move aside.
+      [...state.layers].reverse().forEach((item, i) => {
+        const element = [...$("layerList").children].find(
+          (el) => el.dataset.layerId === item.id,
+        );
+        element.style.order = i;
+      });
+      render();
     };
     handle.onpointerup = () => {
+      if (!drag) return;
       row.classList.remove("reordering");
-      document
-        .querySelectorAll(".drop-target")
-        .forEach((el) => el.classList.remove("drop-target"));
-      if (destination && destination !== l.id)
-        change(() => {
-          const from = state.layers.findIndex((x) => x.id === l.id),
-            to = state.layers.findIndex((x) => x.id === destination);
-          state.layers.splice(from, 1);
-          state.layers.splice(to, 0, l);
-        });
-      destination = null;
+      drag.ghost.remove();
+      if (state.layers.some((item, i) => item.id !== drag.order[i].id)) {
+        history.push(drag.before);
+        if (history.length > 40) history.shift();
+        future = [];
+      }
+      drag = null;
+      changed();
     };
     handle.onpointercancel = () => {
-      destination = null;
+      if (!drag) return;
+      state.layers = drag.order;
+      drag.ghost.remove();
+      drag = null;
       row.classList.remove("reordering");
-      document
-        .querySelectorAll(".drop-target")
-        .forEach((el) => el.classList.remove("drop-target"));
+      render();
+      updateUI();
     };
     row.append(handle, b, actions);
     $("layerList").append(row);
