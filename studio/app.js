@@ -163,6 +163,7 @@ moveArtworkButton.hidden = true;
 layerOptions.replaceWith($("transformControls"));
 $("duplicateLayer").parentElement.hidden = true;
 $("tools").append(colorButton);
+$("tools").append($("openLayers"));
 // A view-only shortcut palette: reuse the real controls so shortcuts cannot
 // drift from the left rail or create duplicate editing behavior.
 const quickTools = document.createElement("div");
@@ -203,7 +204,7 @@ $("stage").addEventListener("contextmenu", (e) => {
     Math.max(
       stage.left + 6,
       Math.min(
-        e.clientX,
+        e.clientX - bounds.width / 2,
         stage.right - bounds.width - 6,
         innerWidth - bounds.width - 8,
       ),
@@ -212,7 +213,7 @@ $("stage").addEventListener("contextmenu", (e) => {
     Math.max(
       stage.top + 6,
       Math.min(
-        e.clientY,
+        e.clientY - bounds.height / 2,
         stage.bottom - bounds.height - 6,
         innerHeight - bounds.height - 8,
       ),
@@ -311,10 +312,14 @@ for (const [value, name, symbol] of [
   ["pencil", "Pencil", "✏️"],
   ["pen", "Pen", "🖊️"],
   ["marker", "Marker", "🖍️"],
+  ["spray", "Spray", "🎨"],
 ]) {
   const b = document.createElement("button");
   b.dataset.preset = value;
   b.innerHTML = `<span aria-hidden="true">${symbol}</span>${name}`;
+  if (value === "spray")
+    b.querySelector("span").innerHTML =
+      customColor.querySelector("svg").outerHTML;
   b.setAttribute("aria-pressed", value === "pen");
   b.onclick = () => {
     $("brushPreset").value = value;
@@ -326,6 +331,17 @@ for (const [value, name, symbol] of [
   brushChoices.append(b);
 }
 $("brushOptions").prepend(brushChoices);
+$("brushPreset").append(new Option("Spray paint", "spray"));
+let customBrushSize = false,
+  customBrushStrength = false;
+const resetBrush = document.createElement("button");
+resetBrush.textContent = "Reset brush defaults";
+resetBrush.onclick = () => {
+  customBrushSize = false;
+  customBrushStrength = false;
+  $("brushPreset").onchange();
+};
+$("brushOptions").append(resetBrush);
 $("brushPreset").hidden = true;
 document.querySelector('[for="brushPreset"]').hidden = true;
 // Everyday brush controls stay visible; custom color values live together.
@@ -939,8 +955,20 @@ function syncTools() {
   document
     .querySelectorAll("[data-tool]")
     .forEach((b) => b.setAttribute("aria-pressed", b.dataset.tool === tool));
+  const preset = $("brushPreset").value;
+  const glyph =
+    tool === "eraser"
+      ? icons.erase
+      : preset === "spray"
+        ? '<path d="M3 22h10V9H3zM6 5h4v4M15 7h2M19 4h2M19 10h2M23 2h1M23 12h1"/>'
+        : icons.draw;
+  const cursorSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 28 28"><g stroke="white" stroke-width="4" fill="none">${glyph}</g><g stroke="black" stroke-width="1.8" fill="none">${glyph}</g><text x="18" y="27" font-size="9" fill="white" stroke="black" stroke-width=".3">${tool === "eraser" ? "E" : preset === "pencil" ? "✎" : preset === "marker" ? "M" : preset === "spray" ? "S" : "P"}</text></svg>`;
   $("stage").style.cursor =
-    tool === "pan" ? "grab" : tool === "select" ? "default" : "crosshair";
+    tool === "pan"
+      ? "grab"
+      : tool === "select"
+        ? "move"
+        : `url("data:image/svg+xml,${encodeURIComponent(cursorSvg)}") 3 22, crosshair`;
 }
 function baseSize() {
   return Math.max(
@@ -1121,20 +1149,52 @@ function strokeStart(p, e) {
       [p.x, p.y, e.pointerType === "pen" ? Math.max(0.05, e.pressure) : 0.5],
     ],
   };
-  target.strokes.push(l);
+  const spray = tool === "brush" && $("brushPreset").value === "spray";
+  if (!spray) target.strokes.push(l);
   selected = target.id;
-  gesture = { type: "draw", id: e.pointerId, layer: l };
+  gesture = { type: "draw", id: e.pointerId, layer: l, spray, target };
+  if (spray) sprayAt(p);
   render();
   return true;
 }
 function strokeMove(p, e) {
   if (gesture?.type !== "draw") return;
+  if (gesture.spray) {
+    sprayAt(p);
+    requestRender();
+    return;
+  }
   gesture.layer.points.push([
     p.x,
     p.y,
     e.pointerType === "pen" ? Math.max(0.05, e.pressure) : 0.5,
   ]);
   requestRender();
+}
+function sprayAt(p) {
+  const g = gesture,
+    radius = g.layer.size / 2;
+  if (
+    g.lastSpray &&
+    Math.hypot(p.x - g.lastSpray.x, (p.y - g.lastSpray.y) * aspect()) <
+      Math.max(1, radius / 5)
+  )
+    return;
+  g.lastSpray = p;
+  // Bake individual dots into ordinary strokes: exports, undo and saved
+  // projects reproduce the same spray without rerandomizing on each render.
+  for (let i = 0; i < 16; i++) {
+    const a = Math.random() * Math.PI * 2,
+      r = Math.sqrt(Math.random()) * radius;
+    g.target.strokes.push({
+      ...g.layer,
+      id: uid(),
+      size: Math.max(0.6, radius * 0.06),
+      points: [
+        [p.x + Math.cos(a) * r, p.y + (Math.sin(a) * r) / aspect(), 0.5],
+      ],
+    });
+  }
 }
 let framePending = false;
 function requestRender() {
@@ -1417,15 +1477,21 @@ function setBrushColor(color) {
 setBrushColor($("brushColor").value);
 $("brushColor").oninput = () => setBrushColor($("brushColor").value);
 $("brushOpacity").oninput = () => {
+  customBrushStrength = true;
   $("brushOpacityValue").textContent = $("brushOpacity").value + "%";
 };
 $("brushPreset").onchange = () => {
-  const presets = { pen: [8, 100], pencil: [2, 100], marker: [28, 40] };
+  const presets = {
+    pen: [8, 100],
+    pencil: [2, 100],
+    marker: [28, 40],
+    spray: [48, 35],
+  };
   const [size, opacity] = presets[$("brushPreset").value];
-  $("brushSize").value = size;
-  $("brushSizeValue").textContent = size + " px";
-  $("brushOpacity").value = opacity;
-  $("brushOpacityValue").textContent = opacity + "%";
+  if (!customBrushSize) $("brushSize").value = size;
+  $("brushSizeValue").textContent = $("brushSize").value + " px";
+  if (!customBrushStrength) $("brushOpacity").value = opacity;
+  $("brushOpacityValue").textContent = $("brushOpacity").value + "%";
   setTool("brush");
 };
 $("addPaintLayer").onclick = () => {
@@ -1437,6 +1503,7 @@ $("addPaintLayer").onclick = () => {
   setTool("brush");
 };
 $("brushSize").oninput = () => {
+  customBrushSize = true;
   $("brushSizeValue").textContent = $("brushSize").value + " px";
 };
 for (const k of ["baseColor", "accentColor", "pattern"]) {
