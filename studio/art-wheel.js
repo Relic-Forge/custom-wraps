@@ -69,7 +69,9 @@ export function mountArtWheel({
   const sizing = document.createElement("div");
   sizing.className = "wheel-sizing";
   const label = document.createElement("label");
-  label.textContent = "Size";
+  const sizeTitle = document.createElement("span");
+  sizeTitle.textContent = "Size";
+  label.append(sizeTitle);
   const readout = document.createElement("output");
   label.append(readout);
   const slider = document.createElement("input");
@@ -103,13 +105,18 @@ export function mountArtWheel({
     sound(true);
   };
   syncSound();
-  sizing.append(label, slider, soundButton);
+  const hint = document.createElement("p");
+  hint.className = "wheel-size-hint";
+  hint.textContent = "Point at a tool · scroll to resize · release";
+  sizing.append(label, slider, hint, soundButton);
   wheel.append(sizing);
   document.body.append(wheel);
   function syncSize() {
     const size = getSize();
     slider.value = 100 * Math.sqrt((size - 1) / 79);
     readout.textContent = ` ${size} px`;
+    const named = items.find((item) => item[0] === current());
+    sizeTitle.textContent = `${named?.[1] || "Brush"} size`;
   }
   function highlight(index) {
     if (active !== index && index >= 0) sound();
@@ -132,12 +139,13 @@ export function mountArtWheel({
   }
   function open(x, y) {
     const width = 260,
-      height = 390;
+      height = 420;
     const left = Math.max(8, Math.min(x - width / 2, innerWidth - width - 8));
     const top = Math.max(8, Math.min(y - 130, innerHeight - height - 8));
     wheel.style.left = left + "px";
     wheel.style.top = top + "px";
     wheel.hidden = false;
+    hint.textContent = "Point at a tool · scroll to resize · release";
     highlight(-1);
     syncSize();
     buttons.forEach((b, i) =>
@@ -162,15 +170,18 @@ export function mountArtWheel({
     if (Math.hypot(e.clientX - held.startX, e.clientY - held.startY) > 8)
       moved = true;
     if (!moved) return;
+    // Scroll owns size until release. Never reinterpret pointer movement as
+    // slider dragging after the scroll gesture has started.
+    if (held.sizing === "scroll") return;
     const sizeBox = sizing.getBoundingClientRect();
     if (
-      held.sizing ||
+      held.sizing === "drag" ||
       (e.clientX >= sizeBox.left &&
         e.clientX <= sizeBox.right &&
         e.clientY >= sizeBox.top &&
         e.clientY <= sizeBox.bottom)
     ) {
-      held.sizing = true;
+      held.sizing = "drag";
       highlight(-1);
       center.textContent = "Size";
       const track = slider.getBoundingClientRect();
@@ -238,10 +249,24 @@ export function mountArtWheel({
     if (wheel.hidden) return;
     e.preventDefault();
     e.stopImmediatePropagation();
+    if (e.deltaY === 0) return;
     if (held) {
-      held.sizing = true;
-      highlight(-1);
-      center.textContent = "Size";
+      if (held.sizing !== "scroll") {
+        const candidate =
+          active >= 0
+            ? active
+            : items.findIndex((item) => item[0] === current());
+        if (candidate < 0 || items[candidate][0] === "pan") return;
+        if (active >= 0) select(items[candidate][0]);
+        held.sizeTool = candidate;
+        held.sizing = "scroll";
+        highlight(candidate);
+        buttons.forEach((b, i) =>
+          b.setAttribute("aria-pressed", i === candidate),
+        );
+      }
+      center.textContent = `${items[held.sizeTool][1]} size`;
+      hint.textContent = "Scroll to resize · release to draw";
     }
     setSize(Math.max(1, Math.min(80, getSize() + (e.deltaY > 0 ? -1 : 1))));
     syncSize();

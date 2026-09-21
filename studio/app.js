@@ -1,5 +1,5 @@
 import { pinchView } from "./view-gesture.js";
-import { mountArtWheel } from "./art-wheel.js?v=0.11.1";
+import { mountArtWheel } from "./art-wheel.js?v=0.11.2";
 import {
   SIZE,
   MAX_BYTES,

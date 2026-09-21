@@ -66,7 +66,7 @@ test("wheel selects with a single right-button gesture, cancels in center, and s
       getSize: () => size,
       setSize: (v) => (size = v),
       select: (v) => selected.push(v),
-      current: () => "pen",
+      current: () => selected.at(-1) || "pen",
     });
     const wheel = doc.body.children[0];
     stage.emit("pointerdown");
@@ -132,6 +132,33 @@ test("wheel selects with a single right-button gesture, cancels in center, and s
     stage.emit("pointerdown");
     stage.emit("lostpointercapture");
     assert.equal(wheel.hidden, true);
+    // Aim explicitly, then scroll: pointer drift must not become a slider drag
+    // or select a different sector, even when crossing the entire sizing card.
+    for (const [tool, x, y] of [
+      ["pencil", 400, 200],
+      ["eraser", 315, 350],
+    ]) {
+      size = 20;
+      stage.emit("pointerdown");
+      stage.emit("pointermove", { clientX: x, clientY: y });
+      stage.emit("wheel", { deltaY: -1 });
+      assert.equal(selected.at(-1), tool);
+      assert.equal(size, 21);
+      const count = selected.length;
+      stage.emit("pointermove", { clientX: 514, clientY: 480 });
+      stage.emit("pointermove", { clientX: 900, clientY: 100 });
+      assert.equal(size, 21);
+      assert.equal(selected.length, count);
+      stage.emit("wheel", { deltaY: -1 });
+      assert.equal(size, 22);
+      stage.emit("wheel", { deltaY: 0 });
+      assert.equal(size, 22);
+      stage.emit("wheel", { deltaY: 1 });
+      assert.equal(size, 21);
+      stage.emit("pointerup");
+      assert.equal(selected.length, count);
+      assert.equal(wheel.hidden, true);
+    }
   } finally {
     Object.assign(globalThis, saved);
   }

@@ -1199,6 +1199,7 @@ dialog.editor-flyout[open] {
   margin: 0;
   accent-color: var(--selected-ink);
 }
+.wheel-size-hint {margin:0 0 6px;color:var(--muted);font-size:11px;text-align:center;line-height:1.4;}
 .wheel-sizing .wheel-sound {
   min-height: 30px;
   padding: 4px 8px;
