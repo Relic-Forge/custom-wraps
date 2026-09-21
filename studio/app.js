@@ -30,6 +30,14 @@ for (const el of [
   projectActions.append(el);
 settingsDialog.append(projectActions);
 layersDialog.append($("layerList").closest("section"));
+const addPhotoLayer = document.createElement("button");
+addPhotoLayer.textContent = "＋ Photo or image";
+addPhotoLayer.className = "wide";
+addPhotoLayer.onclick = () => {
+  layersDialog.close();
+  $("addDialog").showModal();
+};
+$("addPaintLayer").after(addPhotoLayer);
 const layerOptions = document.createElement("details");
 layerOptions.innerHTML = "<summary>Adjust this layer</summary>";
 $("transformControls").before(layerOptions);
