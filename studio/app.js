@@ -179,21 +179,126 @@ const quickSources = [
   document.querySelector('[data-tool="eraser"]'),
   colorButton,
 ];
+const quickDetail = document.createElement("div");
+quickDetail.className = "quick-detail";
+quickDetail.hidden = true;
+let quickHoldTimer;
+function openQuickDetail(eraser = false) {
+  [...quickTools.querySelectorAll("[data-quick-tool]")].forEach((b, i) => {
+    const pressed = quickSources[i].getAttribute("aria-pressed");
+    if (pressed !== null) b.setAttribute("aria-pressed", pressed);
+  });
+  quickDetail.replaceChildren();
+  quickDetail.hidden = false;
+  const title = document.createElement("strong");
+  title.textContent = eraser ? "Eraser size" : "Brush & size";
+  quickDetail.append(title);
+  if (!eraser) {
+    const options = document.createElement("div");
+    options.className = "quick-brushes";
+    for (const [value, label, symbol] of [
+      ["pencil", "Pencil", "✏️"],
+      ["pen", "Pen", "🖊️"],
+      ["marker", "Marker", "🖍️"],
+      ["spray", "Spray", "⁙"],
+    ]) {
+      const b = document.createElement("button");
+      b.textContent = `${symbol} ${label}`;
+      b.setAttribute("aria-pressed", $("brushPreset").value === value);
+      b.onclick = () => {
+        brushChoices.querySelector(`[data-preset="${value}"]`).click();
+        openQuickDetail(false);
+      };
+      options.append(b);
+    }
+    quickDetail.append(options);
+  }
+  const label = document.createElement("label"),
+    slider = document.createElement("input"),
+    value = document.createElement("output");
+  label.textContent = "Size ";
+  value.textContent = $("brushSize").value + " px";
+  label.append(value);
+  slider.type = "range";
+  slider.min = 1;
+  slider.max = 80;
+  slider.value = $("brushSize").value;
+  slider.setAttribute(
+    "aria-label",
+    eraser ? "Quick eraser size" : "Quick brush size",
+  );
+  slider.oninput = () => {
+    $("brushSize").value = slider.value;
+    $("brushSize").oninput();
+    value.textContent = slider.value + " px";
+  };
+  quickDetail.append(label, slider);
+  quickDetail.style.bottom = "auto";
+  quickDetail.style.top = "calc(100% + 8px)";
+  const rect = quickDetail.getBoundingClientRect();
+  if (rect.bottom > innerHeight - 8) {
+    quickDetail.style.top = "auto";
+    quickDetail.style.bottom = "calc(100% + 8px)";
+  }
+}
 for (const source of quickSources) {
   const shortcut = document.createElement("button");
   shortcut.innerHTML = source.innerHTML;
   shortcut.title = source.title;
   shortcut.setAttribute("aria-label", source.getAttribute("aria-label"));
+  shortcut.dataset.quickTool = "true";
+  let held = false;
+  if (source.dataset.tool === "brush") {
+    shortcut.title = "Draw · hold for brushes and size";
+    shortcut.onpointerdown = (e) => {
+      held = false;
+      shortcut.setPointerCapture(e.pointerId);
+      quickHoldTimer = setTimeout(() => {
+        held = true;
+        setTool("brush");
+        openQuickDetail();
+      }, 240);
+    };
+    shortcut.onpointerup = (e) => {
+      clearTimeout(quickHoldTimer);
+      if (held) {
+        const choice = document
+          .elementFromPoint(e.clientX, e.clientY)
+          ?.closest(".quick-brushes button");
+        if (choice) choice.click();
+      }
+    };
+    shortcut.onpointercancel = () => {
+      clearTimeout(quickHoldTimer);
+      held = false;
+    };
+  }
   shortcut.onclick = () => {
+    if (held) {
+      held = false;
+      return;
+    }
+    if (source.dataset.tool === "eraser") {
+      source.click();
+      openQuickDetail(true);
+      return;
+    }
     quickTools.hidden = true;
     source.click();
   };
   quickTools.append(shortcut);
 }
+const quickExpand = document.createElement("button");
+quickExpand.textContent = "⌄";
+quickExpand.title = "Brushes and size";
+quickExpand.setAttribute("aria-label", "Brushes and size");
+quickExpand.onclick = () => openQuickDetail(tool === "eraser");
+quickTools.append(quickExpand, quickDetail);
 $("stage").addEventListener("contextmenu", (e) => {
   e.preventDefault();
   quickTools.hidden = false;
-  [...quickTools.children].forEach((b, i) => {
+  quickDetail.hidden = true;
+  [...quickTools.querySelectorAll("[data-quick-tool]")].forEach((b, i) => {
     const pressed = quickSources[i].getAttribute("aria-pressed");
     if (pressed !== null) b.setAttribute("aria-pressed", pressed);
   });
@@ -221,10 +326,16 @@ $("stage").addEventListener("contextmenu", (e) => {
   quickTools.firstElementChild.focus();
 });
 document.addEventListener("pointerdown", (e) => {
-  if (!quickTools.contains(e.target)) quickTools.hidden = true;
+  if (!quickTools.contains(e.target)) {
+    clearTimeout(quickHoldTimer);
+    quickTools.hidden = true;
+  }
 });
 quickTools.addEventListener("keydown", (e) => {
-  const buttons = [...quickTools.children],
+  if (e.target.tagName === "INPUT" && e.key !== "Escape") return;
+  const buttons = [...quickTools.children].filter(
+      (el) => el.tagName === "BUTTON",
+    ),
     index = buttons.indexOf(document.activeElement);
   if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
     e.preventDefault();
@@ -236,6 +347,7 @@ quickTools.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     e.preventDefault();
     quickTools.hidden = true;
+    clearTimeout(quickHoldTimer);
     $("stage").focus();
   }
 });
