@@ -1,7 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
-import { exportSizes, safeName, MAX_BYTES } from "../studio/core.js";
+import { safeName } from "../studio/core.js";
+import { exportImage } from "./export-image.mjs";
 import { validateWrap } from "./validate-wrap.mjs";
 const root = path.resolve(import.meta.dirname, "..");
 export async function finishDrawing(
@@ -26,39 +27,29 @@ export async function finishDrawing(
     throw Error(
       "Drawing aspect ratio differs from the template. Restore the uncropped canvas; do not stretch it.",
     );
-  for (const [width, height] of exportSizes(vehicle.width, vehicle.height)) {
-    const rgb = await sharp(source)
-      .resize(width, height, { fit: "fill" })
-      .removeAlpha()
-      .raw()
-      .toBuffer();
-    const mask = await sharp(path.join(root, vehicle.id, "template.png"))
-      .resize(width, height, { fit: "fill" })
-      .ensureAlpha()
-      .extractChannel(3)
-      .raw()
-      .toBuffer();
-    const png = await sharp(rgb, { raw: { width, height, channels: 3 } })
-      .joinChannel(mask, { raw: { width, height, channels: 1 } })
-      .png({ compressionLevel: 9 })
-      .toBuffer();
-    if (png.length > MAX_BYTES) continue;
-    await fs.mkdir(outputDirectory, { recursive: true });
-    const file = path.resolve(outputDirectory, safeName(name));
-    await fs.writeFile(file, png, { flag: "wx" });
-    const report = await validateWrap(file, vehicleId);
-    if (!report.passed)
-      throw Error("Output failed validation: " + JSON.stringify(report.checks));
-    await fs.writeFile(
-      file.replace(/\.png$/, ".validation.json"),
-      JSON.stringify(report, null, 2),
-      { flag: "wx" },
-    );
-    return { ...report, output: file };
-  }
-  throw Error("Drawing exceeds 1 MB at minimum dimensions; simplify artwork.");
+  const { png } = await exportImage(
+    source,
+    path.join(root, vehicle.id, "template.png"),
+    vehicle,
+  );
+  await fs.mkdir(outputDirectory, { recursive: true });
+  const file = path.resolve(outputDirectory, safeName(name));
+  await fs.writeFile(file, png, { flag: "wx" });
+  const report = await validateWrap(file, vehicleId);
+  if (!report.passed)
+    throw Error("Output failed validation: " + JSON.stringify(report.checks));
+  await fs.writeFile(
+    file.replace(/\.png$/, ".validation.json"),
+    JSON.stringify(report, null, 2),
+    { flag: "wx" },
+  );
+  return { ...report, output: file };
 }
-if (process.argv[1] && path.resolve(process.argv[1]) === import.meta.filename) {
+if (
+  process.argv[1] &&
+  (await fs.realpath(process.argv[1])) ===
+    (await fs.realpath(import.meta.filename))
+) {
   try {
     if (!process.argv[4])
       throw Error(

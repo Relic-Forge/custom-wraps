@@ -1,12 +1,14 @@
 {
   "templateSource": "https://github.com/teslamotors/custom-wraps",
   "templateRevision": "86c7d31454caf0f20af6f6af105f577643f13bce",
-  "requirementsChecked": "2026-09-20",
+  "requirementsChecked": "2026-09-22",
   "files": {
     "studio/core.js": "703b91c8b00c09fa4355c11fd9b6ced3c4ff8ad8fe2249dc8f1d4dd9b69e97d1",
-    "scripts/compose-wrap.mjs": "284a5bdc5d0adbaa5ff3f6ddbcf6e8202244600313b19a2e28ca4e7af9d5a20e",
-    "scripts/validate-wrap.mjs": "f10bed02f3876dab0649dc6838a3499b0116f71f06f210b5fe84a72881816d0e",
-    "scripts/finish-drawing.mjs": "7a0412fa1d5c5d820916679aa9e6d984f7e1ba86f104e2cad3dafe6ff482d921",
+    "scripts/compose-wrap.mjs": "71b5fa84a027e8173baa285ebef88ecaf8c66f53c3fa97d6c24195dfd35712fe",
+    "scripts/validate-wrap.mjs": "068b29a81372c835cccaf45c2460c166b7d4890c5b306eecbc14d50828a3068b",
+    "scripts/finish-drawing.mjs": "14c604afe9771d37c7b133d2f00dc627fa389b05aca9758e9ba95d297e9f2a63",
+    "scripts/export-image.mjs": "d842c57ac840a8f2c6e2726c5ac8375ae518e4e526d1a36ce69e484f13ddd4f6",
+    "scripts/panel-previews.mjs": "b8649170ea828a1284d4761a767355dda41a1121a1f1f4990f0a8abc5226c0ed",
     "cybertruck/template.png": "02bab88dc29958f0a26d01aea053184da32cd4648862b1bcbb332f831482a658",
     "model3/template.png": "1ab297c83f904d50f3be188818e33d67fad432cbca60d499717e58bb1192055d",
     "model3-2024-base/template.png": "661c8b779ec34890ef453fd096975f17fa40075c988faf343898ac2b6136e443",

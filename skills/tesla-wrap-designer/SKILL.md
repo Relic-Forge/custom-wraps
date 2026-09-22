@@ -17,6 +17,8 @@ Read [runtime and distribution requirements](references/portability.md) before s
 
 ## Compose for the car
 
+For AI assets, read [generation and reference QA](references/generation.md) before prompting. It covers campaign references, identities, exact logos, transparent edges and final-image review. Generation does not replace deterministic geometry or vehicle-view checks.
+
 Before generating or placing artwork, read [the art-direction standard](references/art-direction.md). Establish the intended story, whole-car hierarchy, and physical viewing directions. Apply its visual acceptance checks before delivery and fix obvious design errors without making the user direct corrective rotations.
 
 - Choose focal points and supporting scenes that express the request. A hood hero, side scenes, and rear closing beat are options, not a mandatory formula. Carry a shared palette, visual language, and narrative around the car without overcrowding every panel.

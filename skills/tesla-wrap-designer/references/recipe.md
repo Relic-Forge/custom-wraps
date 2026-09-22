@@ -2,7 +2,7 @@
 
 Resolve the package root from `SKILL.md`. Run `npm ci` inside its `runtime/` directory once to install the pinned dependency. Run the commands below from that directory, or use absolute paths resolved from the package location. All templates and catalog data are already bundled; no repository clone or catalog generation is needed.
 
-Read panel IDs or labels from `studio/vehicles.json`; do not invent IDs. The generator derives safe rectangles from the alpha channel, not guessed bounding boxes. A rectangle with 88% fit leaves breathing room.
+Read panel IDs or labels from `studio/vehicles.json`; do not invent IDs. The exporter uses precomputed safe rectangles from the template's white paintable islands. Preserving alpha alone is not proof of correct placement. A rectangle with 88% fit leaves breathing room.
 
 Example (asset paths resolve relative to the recipe file):
 
@@ -22,6 +22,12 @@ Example (asset paths resolve relative to the recipe file):
 `background` is optional. Use an orientation-neutral full texture here, such as abstract color or scattered star points, not a directional sky/ground scene or a template-shaped image with opaque windows. Place directional scenery as upright per-panel artwork, with the same export transform as its subjects. A scene asset can group its environment and characters for consistent rotation; preserve separate source assets for later edits. Each cutout should have transparent padding and a complete subject. `rotation` optionally overrides panel rotation (0, 90, -90, 180). Do not override from intuition alone for unfamiliar templates.
 
 The helper safe-fits artwork to rectangles; it does not art-direct scenes, provide arbitrary panel-edge bleed, or guarantee seamless cross-panel landscapes. Inspect its result and refine the editable project when needed. Keep the design brief and placement/orientation map in companion notes, not unsupported recipe fields. Follow the [art-direction acceptance pass](art-direction.md) after export.
+
+For subject images add `kind: "cutout"` to reject fully opaque rectangles. Omit it for an intentional scene/background. At most 100 artwork assets are allowed. Assets are local files relative to the recipe, never automatically downloaded.
+
+Optional `reduceColors: true` tries 256, 192 and 128-color artwork reduction before shrinking resolution, then expands to truecolor RGBA with exact template alpha. The report records `colorReduction`; inspect faces and gradients for banding. Default is lossless color with resolution fallback. The embedded project preserves original asset colors.
+
+The compositor also writes a `.previews` directory with upright occupied-panel crops and an evidence index. Inspect every crop. Counter-rotation is not independent verification of vehicle mapping. Use a fresh output name/directory; existing outputs are not overwritten.
 
 ```sh
 node scripts/compose-wrap.mjs /absolute/path/recipe.json /absolute/path/output

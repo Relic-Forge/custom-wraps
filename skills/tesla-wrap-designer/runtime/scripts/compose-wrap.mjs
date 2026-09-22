@@ -2,12 +2,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { validateWrap } from "./validate-wrap.mjs";
-import {
-  fitInPanel,
-  safeName,
-  MAX_BYTES,
-  exportSizes,
-} from "../studio/core.js";
+import { exportImage } from "./export-image.mjs";
+import { panelPreviews } from "./panel-previews.mjs";
+import { fitInPanel, safeName } from "../studio/core.js";
 const root = path.resolve(import.meta.dirname, "..");
 // JSON recipe: vehicle, name, baseColor, background? and artwork[{file,panel,rotation?}].
 // Files resolve relative to the recipe. Panel IDs come from studio/vehicles.json.
@@ -20,7 +17,18 @@ export async function compose(recipePath, outputDirectory) {
   if (!vehicle) throw Error("Choose a vehicle ID from studio/vehicles.json.");
   if (!/^#[a-f\d]{6}$/i.test(recipe.baseColor || "#7562dc"))
     throw Error("baseColor must be a hex color.");
+  if (
+    !Array.isArray(recipe.artwork || []) ||
+    (recipe.artwork || []).length > 100
+  )
+    throw Error("artwork must be an array with at most 100 assets.");
+  if (
+    recipe.reduceColors !== undefined &&
+    typeof recipe.reduceColors !== "boolean"
+  )
+    throw Error("reduceColors must be a boolean.");
   const layers = [],
+    placements = [],
     composites = [],
     base = path.dirname(path.resolve(recipePath));
   if (recipe.background) {
@@ -52,12 +60,28 @@ export async function compose(recipePath, outputDirectory) {
     const rotation = art.rotation ?? panel.rotation;
     if (![0, 90, -90, 180].includes(rotation))
       throw Error("Use quarter-turn rotations for deterministic placement.");
+    if (!art.file || typeof art.file !== "string")
+      throw Error("Each asset needs a local file.");
     const input = await sharp(path.resolve(base, art.file))
         .ensureAlpha()
         .trim({ background: { r: 0, g: 0, b: 0, alpha: 0 } })
         .png()
         .toBuffer(),
       m = await sharp(input).metadata();
+    if (art.kind === "cutout") {
+      const alpha = await sharp(input).extractChannel(3).raw().toBuffer();
+      if (!alpha.some((a) => a < 250) || !alpha.some((a) => a > 0))
+        throw Error(
+          `Cutout ${art.file} must have real transparency and visible pixels; an opaque rectangle is not a cutout.`,
+        );
+    }
+    placements.push({
+      panel: panel.id,
+      name: art.name || path.basename(art.file),
+      rotation,
+      orientationVerified: panel.orientationVerified === true,
+      evidence: panel.orientationEvidence || null,
+    });
     const placement = fitInPanel(m.width, m.height, { ...panel, rotation });
     const transformed = await sharp(input)
       .rotate(rotation)
@@ -114,30 +138,12 @@ export async function compose(recipePath, outputDirectory) {
     .composite(composites)
     .png()
     .toBuffer();
-  let result;
-  for (const [width, height] of exportSizes(vehicle.width, vehicle.height)) {
-    const mask = await sharp(path.join(root, vehicle.id, "template.png"))
-      .resize(width, height, { fit: "fill" })
-      .ensureAlpha()
-      .extractChannel(3)
-      .raw()
-      .toBuffer();
-    const rgb = await sharp(master)
-      .resize(width, height, { fit: "fill" })
-      .removeAlpha()
-      .raw()
-      .toBuffer();
-    const png = await sharp(rgb, { raw: { width, height, channels: 3 } })
-      .joinChannel(mask, { raw: { width, height, channels: 1 } })
-      .png({ compressionLevel: 9 })
-      .toBuffer();
-    if (png.length <= MAX_BYTES) {
-      result = { png, width, height, mask };
-      break;
-    }
-  }
-  if (!result)
-    throw Error("PNG exceeds 1 MB at 512 px. Simplify artwork and retry.");
+  const result = await exportImage(
+    master,
+    path.join(root, vehicle.id, "template.png"),
+    vehicle,
+    { reduceColors: recipe.reduceColors === true },
+  );
   const alpha = await sharp(result.png).extractChannel(3).raw().toBuffer();
   if (!alpha.equals(result.mask)) throw Error("Mask validation failed.");
   await fs.mkdir(outputDirectory, { recursive: true });
@@ -171,9 +177,13 @@ export async function compose(recipePath, outputDirectory) {
     height: result.height,
     bytes: result.png.length,
     alphaDifferences: 0,
+    colorReduction: result.colorReduction,
+    placements,
     orientation:
-      "See vehicle panel metadata; non-Model-Y orientations require confirmation.",
+      "File validity is not orientation approval. Inspect panel previews and independently confirm unverified mappings, including Model Y Premium hood and rear.",
   };
+  report.previews = pngPath.replace(/\.png$/, ".previews");
+  await panelPreviews(result.png, vehicle, placements, report.previews);
   await fs.writeFile(
     pngPath.replace(/\.png$/, ".validation.json"),
     JSON.stringify(report, null, 2),
@@ -183,7 +193,8 @@ export async function compose(recipePath, outputDirectory) {
 }
 if (
   process.argv[1] &&
-  path.resolve(process.argv[1]) === path.resolve(import.meta.filename)
+  (await fs.realpath(process.argv[1])) ===
+    (await fs.realpath(import.meta.filename))
 ) {
   if (!process.argv[2] || !process.argv[3]) {
     console.error(

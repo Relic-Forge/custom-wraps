@@ -12,6 +12,8 @@ const files = [
   "scripts/compose-wrap.mjs",
   "scripts/validate-wrap.mjs",
   "scripts/finish-drawing.mjs",
+  "scripts/export-image.mjs",
+  "scripts/panel-previews.mjs",
 ];
 for (const v of catalog) files.push(`${v.id}/template.png`);
 const hashes = {};
@@ -37,7 +39,7 @@ await fs.writeFile(
     {
       templateSource: "https://github.com/teslamotors/custom-wraps",
       templateRevision: "86c7d31454caf0f20af6f6af105f577643f13bce",
-      requirementsChecked: "2026-09-20",
+      requirementsChecked: "2026-09-22",
       files: hashes,
     },
     null,

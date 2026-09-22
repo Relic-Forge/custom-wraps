@@ -61,7 +61,11 @@ export async function validateWrap(file, vehicleId) {
       "File-format and template-mask validation only; not visual orientation or acceptance by a vehicle.",
   };
 }
-if (process.argv[1] && path.resolve(process.argv[1]) === import.meta.filename) {
+if (
+  process.argv[1] &&
+  (await fs.realpath(process.argv[1])) ===
+    (await fs.realpath(import.meta.filename))
+) {
   try {
     if (!process.argv[2] || !process.argv[3])
       throw Error("Usage: node scripts/validate-wrap.mjs image.png vehicle-id");
