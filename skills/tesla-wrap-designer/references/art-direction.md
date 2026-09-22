@@ -27,6 +27,8 @@ Opposite sides require deliberate layouts, not blind mirroring: text, asymmetric
 
 ## Make the scene believable
 
+- Integrate photos into the body design, not rectangular stickers by default. Use clean transparent subject silhouettes, organic edge fades, or a panel-filling scene with intentional bleed and a shared visual background. Do not safe-fit a complete album cover or opaque square portrait onto a larger panel unless the customer explicitly wants a framed-poster motif. Review edges at car-viewing scale: no accidental boxes, opaque halos, hard shoulder crop lines, or tiny floating portraits. Protect faces while letting secondary effects flow into the surrounding finish.
+
 - Clouds and sky belong above their local horizon; trees and grass grow from their local ground. Rotate scenery with the scene, not independently from it.
 - Standing characters have plausible footing and scale. Contact shadows belong at contact points; falling objects, rain, hanging objects, and smoke follow the scene's chosen physical rules.
 - Share a coherent light source and perspective across connected scenes. Stylized artwork may simplify physics, but accidental contradictions are not a style.
@@ -37,6 +39,12 @@ Opposite sides require deliberate layouts, not blind mirroring: text, asymmetric
 For example, a meadow scene on a side panel is composed with flowers and characters standing on the same ground and clouds above them. Rotate that entire coordinate frame into the side island. Rotating the character while leaving the meadow upright on the flat sheet fails this standard.
 
 ## Designer's acceptance pass
+
+### Hood orientation gate
+
+Choose the physical viewer before placement: default hood viewer stands at the front bumper looking toward the windshield, not inside the cabin looking forward. For Model Y Premium (2025+), front-facing hood artwork requires a 180-degree texture rotation (owner correction, 2026-09-21). In the flat map, the top of an upright source scene points toward the windshield edge of the hood island. Record this viewing direction and evidence in the placement map. Do not infer it from whether the source picture looks upright on the flat sheet.
+
+Inspect the hood separately from both sides and the rear. Rotate the complete scene, including heads, lettering, horizons and directional props; never fix only the faces. A crop counter-rotated by the same placement value merely proves internal consistency, not the actual vehicle mapping. Use independently known vehicle-view directions or an in-car preview; where unavailable, disclose the uncertainty rather than marking the orientation verified. An owner-reported mismatch overrides a stale catalog default. Fix the catalog or explicit recipe rotation as well as the image, then validate the revised output. Intentional alternate reading directions must be stated explicitly.
 
 Inspect the actual exported file, not only generated source art. Review normalized upright views of each occupied surface, the whole-car composition, and a mapped preview where available. Check both thumbnail scale (hierarchy and readability) and close detail (faces, seams, text, and masking).
 

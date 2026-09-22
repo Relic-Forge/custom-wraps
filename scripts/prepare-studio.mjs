@@ -74,9 +74,13 @@ for (const id of (await fs.readdir(root))
         p.label = "Rear center";
       }
     }
+    if (id === "modely-2025-premium" && p.role === "hood") {
+      p.rotation = 180;
+      p.orientationEvidence = "Owner reported 0-degree hood art upside down, 2026-09-21; 180 degrees for viewer at front bumper facing windshield. Not Tesla-certified.";
+    }
     p.orientationVerified =
       id === "modely-2025-premium" &&
-      ["left", "right", "hood"].includes(p.role);
+      ["left", "right"].includes(p.role);
   }
   for (const role of ["hood", "rear"]) {
     const candidates = panels

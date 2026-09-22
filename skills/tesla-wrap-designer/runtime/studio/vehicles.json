@@ -4070,10 +4070,11 @@
           188
         ],
         "aspect": 1,
-        "rotation": 0,
+        "rotation": 180,
         "role": "hood",
         "label": "Hood",
-        "orientationVerified": true
+        "orientationVerified": false,
+        "orientationEvidence": "Owner reported 0-degree hood art upside down, 2026-09-21; corrected to 180 degrees for front-bumper viewer facing windshield, pending in-car confirmation."
       },
       {
         "id": "panel-3",
